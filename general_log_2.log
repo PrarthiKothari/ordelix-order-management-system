@@ -1,0 +1,2148 @@
+c:\xampp\mysql\bin\mysqld.exe, Version: 10.4.32-MariaDB (mariadb.org binary distribution). started with:
+TCP Port: 3306, Named Pipe: C:/xampp/mysql/mysql.sock
+Time		    Id Command	Argument
+c:\xampp\mysql\bin\mysqld.exe, Version: 10.4.32-MariaDB (mariadb.org binary distribution). started with:
+TCP Port: 3306, Named Pipe: C:/xampp/mysql/mysql.sock
+Time		    Id Command	Argument
+c:\xampp\mysql\bin\mysqld.exe, Version: 10.4.32-MariaDB (mariadb.org binary distribution). started with:
+TCP Port: 3306, Named Pipe: C:/xampp/mysql/mysql.sock
+Time		    Id Command	Argument
+c:\xampp\mysql\bin\mysqld.exe, Version: 10.4.32-MariaDB (mariadb.org binary distribution). started with:
+TCP Port: 3306, Named Pipe: C:/xampp/mysql/mysql.sock
+Time		    Id Command	Argument
+260329 21:02:46	     8 Query	SET GLOBAL log_output = 'FILE,TABLE'
+260329 21:03:11	     8 Query	SHOW VARIABLES LIKE 'general_log%'
+		     8 Query	SHOW VARIABLES LIKE 'log_output'
+260329 21:03:22	     8 Query	SELECT DATABASE()
+		     8 Init DB	ordelix_oms_db
+260329 21:04:00	     8 Query	ALTER TABLE customers MODIFY COLUMN updated_at TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+260329 21:04:59	     8 Query	ALTER TABLE customers MODIFY COLUMN updated_at TIMESTAMP DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP
+260329 21:05:37	     8 Query	DESC customers
+260329 21:07:45	     8 Query	ALTER TABLE address ADD COLUMN address_name VARCHAR(100) NOT NULL DEFAULT 'Other' AFTER address_id
+260329 21:07:51	     8 Query	DESC address
+260329 21:16:49	     8 Query	ALTER TABLE address ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+260329 21:16:56	     8 Query	DESC address
+260329 21:26:16	     8 Quit	
+c:\xampp\mysql\bin\mysqld.exe, Version: 10.4.32-MariaDB (mariadb.org binary distribution). started with:
+TCP Port: 3306, Named Pipe: C:/xampp/mysql/mysql.sock
+Time		    Id Command	Argument
+c:\xampp\mysql\bin\mysqld.exe, Version: 10.4.32-MariaDB (mariadb.org binary distribution). started with:
+TCP Port: 3306, Named Pipe: C:/xampp/mysql/mysql.sock
+Time		    Id Command	Argument
+c:\xampp\mysql\bin\mysqld.exe, Version: 10.4.32-MariaDB (mariadb.org binary distribution). started with:
+TCP Port: 3306, Named Pipe: C:/xampp/mysql/mysql.sock
+Time		    Id Command	Argument
+260329 22:50:20	     8 Query	SET GLOBAL log_output = 'FILE,TABLE'
+260329 22:50:27	     8 Query	SELECT DATABASE()
+		     8 Init DB	ordelix_oms_db
+260329 22:56:20	     8 Query	SELECT DATABASE()
+		     8 Init DB	mysql
+260329 22:56:26	     8 Query	SHOW VARIABLES LIKE 'general_log%'
+		     8 Query	SHOW VARIABLES LIKE 'log_output'
+260329 22:58:20	     8 Query	SELECT DATABASE()
+		     8 Init DB	ordelix_oms_db
+260329 22:58:30	     8 Query	DESC customers
+260329 23:00:24	     8 Query	ALTER TABLE customers ADD COLUMN status ENUM('ACTIVE','INACTIVE') NOT NULL DEFAULT 'ACTIVE'
+260329 23:00:32	     8 Query	DESC customers
+260329 23:01:04	     8 Query	ALTER TABLE address ADD COLUMN status ENUM('ACTIVE','INACTIVE') NOT NULL DEFAULT 'ACTIVE'
+260329 23:01:10	     8 Query	DESC address
+260329 23:05:36	     8 Query	CREATE INDEX idx_customers_status ON customers(status)
+260329 23:05:48	     8 Query	CREATE INDEX idx_address_status ON address(status)
+260329 23:28:15	     8 Query	CREATE PROCEDURE sp_create_customer(
+IN sp_name VARCHAR(100),
+IN sp_email VARCHAR(150),
+IN sp_phone VARCHAR(20)
+)
+260329 23:31:10	     8 Query	CREATE PROCEDURE sp_create_customer(
+IN sp_name VARCHAR(100),
+IN sp_email VARCHAR(150),
+IN sp_phone VARCHAR(20)
+)
+BEGIN
+INSERT INTO customers(name, email, phone, status)
+VALUES (sp_name, sp_email, sp_phone, 'ACTIVE');
+END
+260329 23:34:25	     8 Query	CREATE PROCEDURE sp_update_customer(
+IN sp_customer_id INT,
+IN sp_name VARCHAR(100),
+IN sp_phone VARCHAR(20)
+)
+BEGIN
+UPDATE customers SET name = sp_name, phone = sp_phone
+WHERE customer_id = sp_customer_id AND status = 'ACTIVE';
+END
+260329 23:36:06	     8 Query	CREATE PROCEDURE sp_delete_customer(
+IN sp_customer_id INT
+)
+BEGIN
+UPDATE customers SET status = 'INACTIVE'
+WHERE customer_id = sp_customer_id;
+END
+260329 23:38:41	     8 Query	CREATE TRIGGER trg_customers_after_insert
+AFTER INSERT ON customers
+FOR EACH ROW
+BEGIN
+INSERT INTO audit_logs(table_name, action_type, record_id, description)
+VALUES ('customers', 'INSERT', NEW.customer_id, CONCAT('Customer created: ', NEW.email)
+);
+END
+260329 23:41:36	     8 Query	CREATE TRIGGER trg_customers_before_update
+BEFORE UPDATE ON customers
+FOR EACH ROW
+BEGIN
+INSERT INTO audit_logs(table_name, action_type, record_id, description)
+VALUES ('customers', 'UPDATE', OLD.customer_id, CONCAT('Before update - Name: ', OLD.name, ', Phone: ', OLD.phone)
+);
+END
+260329 23:42:56	     8 Query	CREATE TRIGGER trg_customers_after_update
+AFTER UPDATE ON customers
+FOR EACH ROW
+BEGIN
+INSERT INTO audit_logs(table_name, action_type, record_id, description)
+VALUES ('customers', 'UPDATE', NEW.customer_id, CONCAT('After update - Name: ', NEW.name, ', Phone: ', NEW.phone)
+);
+END
+260329 23:46:14	     8 Query	CREATE TRIGGER trg_customers_after_delete_soft
+AFTER UPDATE ON customers
+FOR EACH ROW
+BEGIN
+IF OLD.status = 'ACTIVE' AND NEW. status = 'INACTIVE' THEN
+INSERT INTO audit_logs(table_name, action_type, record_id, description)
+VALUES ('customers', 'DELETE', NEW.customer_id, 'Customer soft deleted')
+);
+END IF;
+END
+260329 23:47:05	     8 Query	CREATE TRIGGER trg_customers_after_delete_soft
+AFTER UPDATE ON customers
+FOR EACH ROW
+BEGIN
+IF OLD.status = 'ACTIVE' AND NEW. status = 'INACTIVE' THEN
+INSERT INTO audit_logs(table_name, action_type, record_id, description)
+VALUES ('customers', 'DELETE', NEW.customer_id, 'Customer soft deleted');
+END IF;
+END
+260330  0:24:46	     8 Query	CREATE PROCEDURE sp_create_address(
+IN sp_customer_id INT,
+IN sp_address_name VARCHAR(100),
+IN sp_line1 VARCHAR(200),
+IN sp_line2 VARCHAR(200),
+IN sp_city VARCHAR(100),
+IN sp_state VARCHAR(100),
+IN sp_country VARCHAR(100),
+IN sp_pin VARCHAR(10)
+)
+BEGIN
+INSERT INTO address(customer_id, address_name, address_line_1, address_line_2, city, state, country, pin_code, status)
+VALUES (sp_customer_id, sp_address_name, sp_line1, sp_line2, sp_city, sp_state, sp_country, sp_pin, 'ACTIVE');
+END
+260330  0:28:24	     8 Query	CREATE PROCEDURE sp_update address(
+IN sp_address_id INT,
+IN sp_address_name VARCHAR(100),
+IN sp_line1 VARCHAR(200),
+IN sp_line2 VARCHAR(200),
+IN sp_city VARCHAR(100),
+IN sp_state VARCHAR(100),
+IN sp_country VARCHAR(100),
+IN sp_pin VARCHAR(10)
+)
+BEGIN
+UPDATE address
+SET address_name = sp_address_name,
+address_line_1 = sp_line1,
+address_line_2 = sp_line2,
+city = sp_city,
+state = sp_state,
+country = sp_country,
+pin_code = sp_pin
+WHERE address_id = sp_address_id AND status = 'ACTIVE';
+END
+260330  0:29:30	     8 Query	CREATE PROCEDURE sp_update_address(
+IN sp_address_id INT,
+IN sp_address_name VARCHAR(100),
+IN sp_line1 VARCHAR(200),
+IN sp_line2 VARCHAR(200),
+IN sp_city VARCHAR(100),
+IN sp_state VARCHAR(100),
+IN sp_country VARCHAR(100),
+IN sp_pin VARCHAR(10)
+)
+BEGIN
+UPDATE address
+SET address_name = sp_address_name,
+address_line_1 = sp_line1,
+address_line_2 = sp_line2,
+city = sp_city,
+state = sp_state,
+country = sp_country,
+pin_code = sp_pin
+WHERE address_id = sp_address_id AND status = 'ACTIVE';
+END
+260330  0:31:08	     8 Query	CREATE PROCEDURE sp_delete_address(
+IN sp_address_id INT
+)
+BEGIN
+UPDATE address SET status = 'INACTIVE' WHERE address_id = sp_address_id;
+END
+260330  0:32:59	     8 Query	CREATE TRIGGER trg_address_after_insert
+AFTER INSERT ON address
+FOR EACH ROW
+BEGIN
+INSERT INTO audit_logs(table_name, action_type, record_id, description)
+VALUES ('address', 'INSERT', NEW.address_id, CONCAT('Address added for customer ID: ', NEW. customer_id));
+END
+260330  0:44:49	     8 Query	CREATE TRIGGER trg_address_before_update
+BEFORE UPDATE ON address
+FOR EACH ROW
+BEGIN
+INSERT INTO audit_logs(table_name, action_type, record_id, description)
+VALUES ('address', 'UPDATE', OLD.address_id, CONCAT('Before update - address_name: ', OLD.address_name, ', address_line_1: ', OLD.address_line_1, ', address_line_2: ', OLD.address_line_2, ', city: ', OLD.city, ', state : ', OLD.state, ', country: ', OLD.country, ', pin_code: ', OLD.pin_code)
+);
+END
+260330  0:46:53	     8 Query	CREATE TRIGGER trg_address_after_update
+AFTER UPDATE ON address
+FOR EACH ROW
+BEGIN
+INSERT INTO audit_logs(table_name, action_type, record_id, description)
+VALUES ('address', 'UPDATE', NEW.address_id, CONCAT('After update - address_name: ', NEW.address_name, ', address_line_1: ', NEW.address_line_1, ', address_line_2: ', NEW.address_line_2, ', city: ', NEW.city, ', state : ', NEW.state, ', country: ', NEW.country, ', pin_code: ', NEW.pin_code)
+);
+END
+260330  0:49:09	     8 Query	CREATE TRIGGER trg_address_after_delete_soft
+AFTER UPDATE ON address
+FOR EACH ROW
+BEGIN
+IF OLD.status = 'ACTIVE' AND NEW.status = 'INACTIVE' THEN
+INSERT INTO audit_logs(table_name, action_type, record_id, description)
+VALUES ('address', 'DELETE', NEW.address_id, 'Address soft deleted');
+END IF;
+END
+260330  0:55:03	     8 Query	CREATE PROCEDURE sp_create_category(
+IN sp_category_name VARCHAR(100)
+)
+BEGIN
+INSERT INTO categories(category_name)
+VALUES (sp_category_name);
+END
+260330  0:56:38	     8 Query	CREATE PROCEDURE sp_update_category(
+IN sp_category_id INT,
+IN sp_category_name VARCHAR(100)
+)
+BEGIN
+UPDATE categories SET category_name = sp_category_name
+WHERE category_id = sp_category_id;
+END
+260330  0:57:27	     8 Query	CREATE PROCEDURE sp_delete_category(
+IN sp_category_id INT
+)
+BEGIN
+DELETE FROM categories WHERE category_id = sp_category_id;
+END
+260330  0:59:08	     8 Query	CREATE TRIGGER trg_categories_after_insert
+AFTER INSERT ON categories
+FOR EACH ROW
+BEGIN
+INSERT INTO audit_logs(table_name, action_type, record_id, description)
+VALUES('categories', 'INSERT', NEW.category_id, CONCAT('Category created: ', NEW.category_name));
+END
+260330  1:00:57	     8 Query	CREATE TRIGGER trg_categories_before_update
+BEFORE UPDATE ON categories
+FOR EACH ROW
+BEGIN
+INSERT INTO audit_logs(table_name, action_type, record_id, description)
+VALUES('categories', 'UPDATE', OLD.category_id, CONCAT('Before update: ', OLD.category_name));
+END
+260330  1:02:01	     8 Query	CREATE TRIGGER trg_categories_after_update
+AFTER UPDATE ON categories
+FOR EACH ROW
+BEGIN
+INSERT INTO audit_logs(table_name, action_type, record_id, description)
+VALUES('categories', 'UPDATE', NEW.category_id, CONCAT('After update: ', NEW.category_name));
+END
+260330  1:03:44	     8 Query	CREATE TRIGGER trg_categories_after_delete_hard
+AFTER DELETE ON categories
+FOR EACH ROW
+BEGIN
+INSERT INTO audit_logs(table_name, action_type, record_id, description)
+VALUES('categories', 'DELETE', OLD.category_id, CONCAT('Category deleted: ', OLD.category_name));
+END
+260330  1:10:28	     8 Query	CREATE PROCEDURE sp_create_product(
+IN sp_name VARCHAR(150),
+IN sp_category_id INT,
+IN sp_price DECIMAL(10,2),
+IN sp_currency CHAR(3),
+IN sp_gst DECIMAL(5,2)
+)
+BEGIN
+INSERT INTO products(product_uuid, product_name, category_id, price, currency, gst_percent, status)
+VALUES (UUID(), sp_name, sp_category_id, sp_price, sp_currency, sp_gst, 'ACTIVE');
+END
+260330  1:13:43	     8 Query	CREATE PROCEDURE sp_update_product(
+IN sp_product_id INT,
+IN sp_name VARCHAR(150),
+IN sp_price DECIMAL(10,2),
+IN sp_gst DECIMAL(5,2),
+IN sp_status ENUM('ACTIVE','INACTIVE')
+)
+BEGIN
+UPDATE products
+SET product_name = sp_product_name, price = sp_price, gst_percent = sp_gst, status = p_status
+WHERE product_id = sp_product_id;
+END
+260330  1:14:15	     8 Query	DROP PROCEDURE sp_update_product
+260330  1:15:17	     8 Query	CREATE PROCEDURE sp_update_product(
+IN sp_product_id INT,
+IN sp_name VARCHAR(150),
+IN sp_price DECIMAL(10,2),
+IN sp_gst DECIMAL(5,2),
+IN sp_status ENUM('ACTIVE','INACTIVE')
+)
+BEGIN
+UPDATE products
+SET product_name = sp_product_name, price = sp_price, gst_percent = sp_gst, status = sp_status
+WHERE product_id = sp+product_id;
+END
+260330  1:16:26	     8 Query	CREATE PROCEDURE sp_delete_product(
+IN sp_product_id INT
+)
+BEGIN
+UPDATE products SET status = 'INACTIVE' WHERE product_id = sp_product_id;
+END
+260330  1:18:47	     8 Query	CREATE TRIGGER trg_products_after_insert
+AFTER INSERT ON products
+FOR EACH ROW
+BEGIN
+INSERT INTO audit_logs(table_name, action_type, record_id, description)
+VALUES ('products', 'INSERT', NEW.product_id, CONCAT('Product created: ', NEW.product_name));
+END
+260330  1:22:20	     8 Query	CREATE TRIGGER trg_products_before_update
+BEFORE UPDATE ON products
+FOR EACH ROW
+BEGIN
+INSERT INTO audit_logs(table_name, action_type, record_id, description)
+VALUES ('products', 'UPDATE', OLD.product_id, CONCAT('Before update - product_name: ', OLD.product_name, ', price: ', OLD.price, ', gst_percent: ', OLD.gst_percent, ', status: ', OLD.status));
+END
+260330  1:23:42	     8 Query	CREATE TRIGGER trg_products_after_update
+AFTER UPDATE ON products
+FOR EACH ROW
+BEGIN
+INSERT INTO audit_logs(table_name, action_type, record_id, description)
+VALUES ('products', 'UPDATE', NEW.product_id, CONCAT('After update - product_name: ', NEW.product_name, ', price: ', NEW.price, ', gst_percent: ', NEW.gst_percent, ', status: ', NEW.status));
+END
+260330  1:25:55	     8 Query	CREATE TRIGGER trg_products_after_delete_soft
+AFTER UPDATE ON products
+FOR EACH ROW
+BEGIN
+IF OLD.status = 'ACTIVE' AND NEW.status = 'INACTIVE' THEN
+INSERT INTO audit_logs(table_name, action_type, record_id, description)
+VALUES ('products', 'DELETE', NEW.product_id, 'Product soft deleted');
+END IF;
+END
+260330  1:26:20	     8 Query	DROP PROCEDURE sp_update_product
+260330  1:27:25	     8 Query	CREATE PROCEDURE sp_update_product(
+IN sp_product_id INT,
+IN sp_name VARCHAR(150),
+IN sp_price DECIMAL(10,2),
+IN sp_gst DECIMAL(5,2),
+IN sp_status ENUM('ACTIVE','INACTIVE')
+)
+BEGIN
+UPDATE products
+SET product_name = sp_product_name, price = sp_price, gst_percent = sp_gst, status = sp_status
+WHERE product_id = sp_product_id;
+END
+260330  1:31:18	     8 Query	DESC warehouse
+260330  1:43:25	     8 Query	ALTER TABLE warehouse ADD COLUMN status ENUM('ACTIVE','INACTIVE') NOT NULL DEFAULT 'ACTIVE'
+260330  1:43:42	     8 Query	DESC warehouse
+260330  1:44:02	     8 Query	CREATE INDEX idx_warehouse_status ON warehouse(status)
+260330  1:47:49	     8 Query	DESC address
+260330  1:51:37	     8 Query	CREATE PROCEDURE sp_create_warehouse(
+IN sp_name VARCHAR(100),
+IN sp_address VARCHAR(200),
+IN sp_city VARCHAR(100),
+IN sp_pin VARCHAR(10)
+)
+BEGIN
+INSERT INTO warehouse(
+wa
+260330  1:52:44	     8 Query	CREATE PROCEDURE sp_create_warehouse(
+IN sp_name VARCHAR(100),
+IN sp_address VARCHAR(200),
+IN sp_city VARCHAR(100),
+IN sp_pin VARCHAR(10)
+)
+BEGIN
+INSERT INTO warehouse(warehouse_name, warehouse_address, city, pin_code, status)
+VALUES (sp_name, sp_address, sp_city, sp_pin, 'ACTIVE');
+END
+260330  1:55:31	     8 Query	CREATE PROCEDURE sp_update_warehouse(
+IN sp_warehouse_id INT,
+IN sp_name VARCHAR(100),
+IN sp_address VARCHAR(200),
+IN sp_city VARCHAR(100),
+IN sp_pin VARCHAR(10)
+)
+BEGIN
+UPDATE warehouse
+SET warehouse_name = sp_warehouse_name, warehouse_address = sp_warehouse_address, city = sp_city, pin_code = sp_pin
+WHERE warehouse_id = sp_warehouse_id AND status = 'ACTIVE';
+END
+260330  1:56:32	     8 Query	CREATE PROCEDURE sp_delete_warehouse(
+IN sp_warehouse_id INT
+)
+BEGIN
+UPDATE warehouse
+SET status = 'INACTIVE' WHERE warehouse_id = sp_warehouse_id;
+END4
+260330  1:56:44	     8 Query	CREATE PROCEDURE sp_delete_warehouse(
+IN sp_warehouse_id INT
+)
+BEGIN
+UPDATE warehouse
+SET status = 'INACTIVE' WHERE warehouse_id = sp_warehouse_id;
+END
+260330  1:58:21	     8 Query	CREATE TRIGGER trg_warehouse_after_insert
+AFTER INSERT ON warehouse
+FOR EACH ROW
+BEGIN
+INSERT INTO audit_logs(table_name, action_type, record_id, description)
+VALUES ('warehouse', 'INSERT', NEW.warehouse_id, CONCAT('Warehouse created: ', NEW.warehouse_name));
+END
+260330  2:01:46	     8 Query	CREATE TRIGGER ON trg_warehouse_before_update
+BEFORE UPDATE ON warehouse
+FOR EACH ROW
+BEGIN
+INSERT INTO audit_logs(table_name, action_type, record_id, description)
+VALUES ('warehouse', 'UPDATE', OLD.warehouse_id, CONCAT('Before update - warehouse_name: ', OLD.warehouse_name, ', warehouse_address: ', OLD.warehouse_address, ', city: ', OLD.city, ', pin_code: ', OLD.pin_code));
+END
+260330  2:02:48	     8 Query	CREATE TRIGGER trg_warehouse_before_update
+BEFORE UPDATE ON warehouse
+FOR EACH ROW
+BEGIN
+INSERT INTO audit_logs(table_name, action_type, record_id, description)
+VALUES ('warehouse', 'UPDATE', OLD.warehouse_id, CONCAT('Before update - warehouse_name: ', OLD.warehouse_name, ', warehouse_address: ', OLD.warehouse_address, ', city: ', OLD.city, ', pin_code: ', OLD.pin_code));
+END
+260330  2:04:09	     8 Query	CREATE TRIGGER trg_warehouse_after_update
+AFTER UPDATE ON warehouse
+FOR EACH ROW
+BEGIN
+INSERT INTO audit_logs(table_name, action_type, record_id, description)
+VALUES ('warehouse', 'UPDATE', NEW.warehouse_id, CONCAT('After update - warehouse_name: ', NEW.warehouse_name, ', warehouse_address: ', NEW.warehouse_address, ', city: ', NEW.city, ', pin_code: ', NEW.pin_code));
+END
+260330  2:05:54	     8 Query	CREATE TRIGGER trg_warehouse_after_delete_soft
+AFTER UPDATE ON warehouse
+FOR EACH ROW
+BEGIN
+IF OLD.status = 'ACTIVE' AND NEW.status = 'INACTIVE' THEN
+INSERT INTO audit_logs(table_name, action_type, record_id, description)
+VALUES ('warehouse', 'DELETE', NEW.warehouse_id, 'Warehouse soft deleted');
+END IF;
+END
+260330  2:12:10	     8 Query	CREATE PROCEDURE sp_add_inventory(
+IN sp_product_id INT,
+IN sp_warehouse_id INT,
+IN sp_quantity INT
+)
+BEGIN
+INSERT INTO inventory(product_id, warehouse_id, stock_quantity, status)
+VALUES (sp_prodcut_id, sp_sp_warehouse_id, sp_quantity, 'ACTIVE');
+END
+260330  2:13:31	     8 Query	CREATE PROCEDURE sp_update_inventory(
+IN sp_inventory_id INT,
+IN sp_quantity INT
+)
+BEGIN
+UPDATE inventory SET stock_quantity = sp_quantity
+WHERE inventory_id = sp_inventory_id AND status = 'ACTIVE';
+END
+260330  2:14:26	     8 Query	CREATE PROCEDURE sp_delete_inventory(
+IN sp_inventory_id INT
+)
+BEGIN
+UPDATE inventory SET status = 'INACTIVE' WHERE inventory_id = sp_inventory_id;
+END
+260330  2:18:37	     8 Query	CREATE TRIGGER trg_inventory_after_insert
+AFTER INSERT ON inventory
+FOR EACH ROW
+BEGIN
+INSERT INTO audit_lod=gs(table_name, action_type, record_id, description)
+VALUES ('inventory', 'INSERT', NEW.inventory_id, CONCAT('Inventory added - Product ID: ', NEW.product_id, ', Warehouse ID: ', NEW.warehouse_id, ', Quantity: ', NEW.stock_quantity));
+END
+260330  2:19:14	     8 Query	CREATE TRIGGER trg_inventory_after_insert
+AFTER INSERT ON inventory
+FOR EACH ROW
+BEGIN
+INSERT INTO audit_logs(table_name, action_type, record_id, description)
+VALUES ('inventory', 'INSERT', NEW.inventory_id, CONCAT('Inventory added - Product ID: ', NEW.product_id, ', Warehouse ID: ', NEW.warehouse_id, ', Quantity: ', NEW.stock_quantity));
+END
+260330  2:22:09	     8 Query	CREATE TRIGGER trg_inventory_before_update
+BEFORE UPDATE ON inventory
+FOR EACH ROW
+BEGIN
+IF NEW.stock_quantity < 0 THEN
+SIGNAL SQLSTATE '45000'
+SET MESSAGE_TEXT = 'Stock quantity cannot be negative$
+;$
+'
+260330  2:25:51	     8 Query	CREATE TRIGGER trg_inventory_before_update
+BEFORE UPDATE ON inventory
+FOR EACH ROW
+BEGIN
+IF NEW.stock_quantity <= 0 THEN
+SIGNAL SQLSTATE '45000'
+SET MESSAGE_TEXT = 'Stock quantity cannot be negative';
+END IF;
+INSERT INTO audit_logs(table_name, action_type, record_id, description)
+VALUES ('inventory', 'UPDATE', OLD.inventory_id, CONCAT('Before update - product_id: ', OLD.product_id, ', warehouse_id: ', ', OLD.warehouse_id, ', stock_quantity: ', OLD.stock_quantity));
+'
+260330  2:26:26	     8 Query	CREATE TRIGGER trg_inventory_before_update
+BEFORE UPDATE ON inventory
+FOR EACH ROW
+BEGIN
+IF NEW.stock_quantity <= 0 THEN
+SIGNAL SQLSTATE '45000'
+SET MESSAGE_TEXT = 'Stock quantity cannot be negative';
+
+END IF
+260330  2:27:35	     8 Query	CREATE TRIGGER trg_inventory_before_update
+BEFORE UPDATE ON inventory
+FOR EACH ROW
+BEGIN
+IF NEW.stock_quantity <= 0 THEN
+SIGNAL SQLSTATE '45000'
+SET MESSAGE_TEXT = 'Stock quantity cannot be negative';
+END IF;
+INSERT INTO audit_logs(table_name, action_type, record_id, description)
+VALUES ('inventory', 'UPDATE', OLD.inventory_id, CONCAT('Before update - product_id: ', OLD.product_id, ', warehouse_id: ', OLD.warehouse_id, ', stock_quantity: ', OLD.stock_quantity));
+END
+260330  2:29:51	     8 Query	CREATE TRIGGER trg_inventory_after_update
+AFTER UPDATE ON inventory
+FOR EACH ROW
+BEGIN
+INSERT INTO audit_logs(table_name, action_type, record_id, description)
+VALUES ('inventory', 'UPDATE', NEW.inventory_id, CONCAT('After update - product_id: ', NEW.product_id, ', warehouse_id: ', NEW.warehouse_id, ', stock_quantity: ', NEW.stock_quantity));
+END
+260330  2:31:26	     8 Query	CREATE TRIGGER trg_inventory_after_delete_soft
+AFTER UPDATE ON inventory
+FOR EACH ROW
+BEGIN
+IF OLD.status = 'ACTIVE' AND NEW.status = 'INACTIVE' THEN
+INSERT INTO audit_logs(table_name, action_type, record_id, description)
+VALUES ('inventory' , 'DELETE', NEW.inventory_id, 'Inventory record soft deleted');
+END IF;
+END
+260330  2:32:53	     8 Query	CREATE TRIGGER trg_inventory_after_delete_soft
+AFTER UPDATE ON inventory
+FOR EACH ROW
+BEGIN
+INSERT INTO audit_logs(table_name, action_type, record_id, description)
+VALUES ('inventory' , 'DELETE', NEW.inventory_id, 'Inventory record soft deleted')
+260330  2:34:04	     8 Query	DESC inventory
+260330  2:35:04	     8 Query	DROP PROCEDURE sp_delete_inventory
+260330  2:36:29	     8 Query	CREATE PROCEDURE sp_delete_inventory(
+IN sp_inventory_id INT
+)
+BEGIN
+DELETE FROM inventory WHERE inventory_id = sp.inventory_id;
+END
+260330  2:39:21	     8 Query	CREATE TRIGGER trg_inventory_after_delete_hard
+AFTER DELETE ON inventory
+FOR EACH ROW
+BEGIN
+INSERT INTO audit_logs(table_name, action_type, record_id, description)
+VALUES('inventory', 'DELETE', OLD.inventory_id, CONCAT('Inventory deleted - Product ID: ', OLD.product_id, ', Warehouse ID: ', OLD.warehouse_id, ', Quantity: ', OLD.stock_quantity));
+END
+260330  2:43:00	     8 Query	SET FOREIGN_KEY_CHECKS = 1
+260330  2:43:03	     8 Quit	
+c:\xampp\mysql\bin\mysqld.exe, Version: 10.4.32-MariaDB (mariadb.org binary distribution). started with:
+TCP Port: 3306, Named Pipe: C:/xampp/mysql/mysql.sock
+Time		    Id Command	Argument
+c:\xampp\mysql\bin\mysqld.exe, Version: 10.4.32-MariaDB (mariadb.org binary distribution). started with:
+TCP Port: 3306, Named Pipe: C:/xampp/mysql/mysql.sock
+Time		    Id Command	Argument
+260330  6:46:33	     8 Query	SET GLOBAL log_output = 'FILE,TABLE'
+260330  6:46:38	     8 Query	SHOW VARIABLES LIKE 'general_log%'
+		     8 Query	SHOW VARIABLES LIKE 'log_output'
+260330  6:46:45	     8 Query	SELECT DATABASE()
+		     8 Init DB	ordelix_oms_db
+260330  6:55:35	     8 Query	CREATE PROCEDURE sp_add_to_cart(
+IN sp_customer_id INT,
+IN sp_product_id INT,
+IN sp_quantity INT
+)
+BEGIN
+DECLARE validate_cart_id INT
+260330  6:59:02	     8 Query	CREATE PROCEDURE sp_add_to_cart(
+IN sp_customer_id INT,
+IN sp_product_id INT,
+IN sp_quantity INT
+)
+BEGIN
+DECLARE validate_cart_id INT;
+
+SELECT cart_id INTO validate_cart_id FROM cart
+WHERE customer_id = sp_customer_id
+LIMIT 1;
+
+IF validate_cart_id IS NULL THEN
+INSERT INTO cart(customer_id) VALUES(sp_customer_id);
+SET validate_customer_id = LAST_INSERT_ID();
+END IF;
+
+INSERT INTO cart_items(cart_id, product_id, quantity)
+VALUES(validate_cart_id, sp_product_id, sp_quantity)
+ON DUPLICATE KEY UPDATE quantity = quantity + sp_quantity;
+END
+260330  7:00:50	     8 Query	CREATE PROCEDURE sp_add_to_cart(
+IN sp_customer_id INT,
+IN sp_product_id INT,
+IN sp_quantity INT
+)
+BEGIN
+DECLARE validate_cart_id INT;
+
+SELECT cart_id INTO validate_cart_id FROM cart
+WHERE customer_id = sp_customer_id
+LIMIT 1;
+
+IF validate_cart_id IS NULL THEN
+INSERT INTO cart(customer_id) VALUES(sp_customer_id);
+SET validate_cart_id = LAST_INSERT_ID();
+END IF;
+
+INSERT INTO cart_items(cart_id, product_id, quantity)
+VALUES(validate_cart_id, sp_product_id, sp_quantity)
+ON DUPLICATE KEY UPDATE quantity = quantity + sp_quantity;
+END
+260330  7:01:10	     8 Query	CREATE PROCEDURE sp_remove_from_Cart(
+260330  7:02:29	     8 Query	CREATE PROCEDURE sp_remove_from_cart(
+IN sp_cart_id INT,
+IN sp_product_id INT
+)
+BEGIN
+DELETE FROM cart_items WHERE cart_id = sp_cart_id AND product_id = sp_product_id;
+END
+260330  7:04:47	     8 Query	CREATE TRIGGER trg_cart_items_insert
+AFTER INSERT ON cart_items
+FOR EACH ROW
+BEGIN
+INSERT INTO audit_logs(table_name, action_type, record_id, description)
+VALUES ('cart_items', 'INSERT', NEW.cart_item_id, 'Item added');
+END
+260330  7:06:22	     8 Query	CREATE TRIGGER trg_cart_items_delete
+AFTER DELETE ON cart_items
+FOR EACH ROW
+BEGIN
+INSERT INTO audit_logs(table_name, action_type, record_id, description)
+VALUES ('cart_items', 'DELETE', OLD.cart_item_id, 'Item removed');
+END
+260330  7:12:30	     8 Query	CREATE PROCEDURE sp_place_order(
+IN sp_customer_id INT
+)
+BEGIN
+DECLARE validate_cart_id INT;
+DECLARE validate_order_id INT;
+
+START TRANSACTION;
+
+SELECT cart_id INTO validate_cart_id FROM cart 
+WHERE customer_id = sp_customer_id;
+
+INSERT INTO orders(customer_id, status, total_amount)
+260330  7:12:56	     8 Query	CREATE PROCEDURE sp_pace_order(
+260330  7:19:37	     8 Query	CREATE PROCEDURE sp_place_order(
+IN sp_customer_id INT
+)
+BEGIN
+DECLARE validate_cart_id INT;
+DECLARE validate_order_id INT;
+DECLARE validate_total DECIMAL(12,2);
+
+START TRANSACTION;
+
+SELECT cart_id INTO validate_cart_id FROM cart
+WHERE customer_id = sp_customer_id;
+
+INSERT INTO orders(customer_id, status, total_amount)
+VALUES(sp_customer_id. 'PLACED', 0);
+
+SET validate_order_id = LAST_INSERT_ID();
+
+INSERT INTO order_items(order_id, product_id, quantity, price)
+SELECT validate_order_id, ci.product_id, ci.quantity, p.price
+FROM cart_items ci
+JOIN products p ON ci.product_id = p.product_id
+WHERE ci.cart_id = validate_cart_id;
+
+SELECT fn_calculate_order_total(validate_order_id) INTO validate_total;
+
+UPDATE orders SET total_amount = validate_total
+WHERE order_id = validate_order_id;
+
+DELETE FROM cart_items WHERE cart_id = validate_cart_id;
+
+COMMIT;
+END
+260330  7:20:15	     8 Query	CREATE PROCEDURE sp_place_order(
+IN sp_customer_id INT
+)
+BEGIN
+DECLARE validate_cart_id INT;
+DECLARE validate_order_id INT;
+DECLARE validate_total DECIMAL(12,2);
+START TRANSACTION;
+SELECT cart_id INTO validate_cart_id FROM cart
+260330  7:22:50	     8 Query	CREATE PROCEDURE sp_place_order(
+IN sp_customer_id INT
+)
+BEGIN
+DECLARE validate_cart_id INT;
+DECLARE validate_order_id INT;
+DECLARE validate_total DECIMAL(12,2);
+
+START TRANSACTION;
+
+SELECT cart_id INTO validate_cart_id FROM cart
+WHERE customer_id = sp_customer_id;
+
+INSERT INTO orders(customer_id, status, total_amount)
+VALUES(sp_customer_id, 'PLACED', 0);
+
+SET validate_order_id = LAST_INSERT_ID();
+
+INSERT INTO order_items(order_id, product_id, quantity, price)
+SELECT validate_order_id, ci.product_id, ci.quantity, p.price
+FROM cart_items ci
+JOIN products p ON ci.product_id = p.product_id
+WHERE ci.cart_id = validate_cart_id;
+
+SELECT fn_calculate_order_total(validate_order_id) INTO validate_total;
+
+UPDATE orders SET total_amount = validate_total
+WHERE order_id = validate_order_id;
+
+DELETE FROM cart_items WHERE cart_id = validate_cart_id;
+
+COMMIT;
+END
+260330  7:27:29	     8 Query	CREATE FUNCTION fn_calculate_order_total(
+fn_order_id INT
+)
+RETURNS DECIMAL(12,2)
+DETERMINISTIC
+BEGIN
+DECALRE validate_total DECIMAL(12,2);
+
+SELECT SUM(oi.quantity * oi.price * (1+ (p.gst_percent / 100))) INTO validate_total
+FROM order_items oi
+JOIN products p ON oi.product_id = p.product_id
+WHERE oi.order_id = fn_order_id;
+
+RETURN IFNULL(validate_total,0);
+END
+260330  7:28:20	     8 Query	CREATE FUNCTION fn_calculate_order_total(
+fn_order_id INT
+)
+RETURNS DECIMAL(12,2)
+DETERMINISTIC
+BEGIN
+DECLARE validate_total DECIMAL(12,2);
+
+SELECT SUM(oi.quantity * oi.price * (1+ (p.gst_percent / 100))) INTO validate_total
+FROM order_items oi
+JOIN products p ON oi.product_id = p.product_id
+WHERE oi.order_id = fn_order_id;
+
+RETURN IFNULL(validate_total,0);
+
+END
+260330  7:44:39	     8 Query	CREATE PROCEDURE sp_make_payment(
+IN sp_order_id INT,
+IN sp_amount DECIMAL(12,2),
+IN sp_method VARCHA
+260330  7:46:42	     8 Query	ALTER TABLE payments MODIFY COLUMN payment_method ENUM('UPI','Card','Net Banking','COD') NOT NULL DEFAULT 'UPI'
+260330  7:46:52	     8 Query	DESC payments
+260330  7:52:38	     8 Query	CREATE PROCEDURE sp_make_payment(
+IN sp_order_id INT,
+IN sp_amount DECIMAL(12,2),
+IN sp_method ENUM('UPI','Card','Net Banking','COD')
+)
+BEGIN
+INSERT INTO payments(order_id, amount, payment_method, payment_status)
+VALUES(sp_order_id, sp_amount, sp_method, 'COMPLETED');
+END
+260330  8:00:00	     8 Query	CREATE TRIGGER trg_payment_success
+AFTER INSERT ON payments
+FOR EACH ROW
+BEGIN
+IF NEW.payment_status = 'COMPLETED' THEN
+
+UPDATE orders SET status = 'PAID' WHERE order_id = NEW. order_id;
+
+INSERT INTO shipments(order_id, address_id
+260330  8:01:43	     8 Query	DROP PROCEDURE sp_place_order
+260330  8:09:26	     8 Query	CREATE PROCEDURE sp_place_order(
+IN sp_customer_id INT,
+IN sp_address_id INT
+)
+BEGIN
+DECLARE validate_cart_id INT;
+DECLARE validate_order_id INT;
+DECLARE validate_total DECIMAL(12,2);
+
+START TRANSACTION;
+
+SELECT cart_id INTO validate_cart_id FROM cart
+WHERE customer_id = sp_customer_id;
+
+INSERT INTO orders(order_uuid, customer_id, address_id, status, total_amount)
+VALUES(UUID(), sp_customer_id, sp_address_id, 'PLACED', 0);
+
+SET validate_order_id = LAST_INSERT_ID();
+
+INSERT INTO order_items(order_id, product_id, quantity, price)
+SELECT validate_order_id, ci.product_id, ci.quantity, p.price
+FROM cart_items ci
+JOIN products p ON ci.product_id = p.product_id
+WHERE ci.cart_id = validate_cart_id;
+
+SELECT fn_calculate_order_total(
+validate_order_id) INTO validate_total;
+
+UPDATE orders SET total_amount = validate_total WHERE order_id = validate_order_id;
+
+DELETE FROM cart_items WHERE cart_id = validate_cart_id;
+
+COMMIT;
+
+END
+260330  8:24:23	     8 Query	CREATE TRIGGER trg_payment_success
+AFTER INSERT ON payments
+FOR EACH ROW
+BEGIN
+DECLARE validate_address_id INT;
+
+IF NEW.payment_status = 'COMPLETED' THEN
+
+SELECT address_id INTO validate_address_id FROM orders
+WHERE order_id = NEW. order_id;
+
+UPDATE orders SET status = 'PAID' WHERE order_id = NEW.order_id;
+
+INSERT INTO shipments(order_id, address_id, shipment_date, status)
+VALUES(NEW.order_id, validate_address_id, DATE_ADD(NOW(), INTERVAL 2 DAY), 'SHIPPED');
+
+INSERT INTO audit_logs(table_name, action_type, record_id, description)
+VALUES('payments', 'INSERT', NEW.payment_id, CONCAT('Payment completed. Order marked PAID'));
+
+INSERT INTO audit_logs(table_name, action_type, record_id, description)
+VALUES('shipments', 'INSERT', NEW.shipment_id, CONCAT('Shipment created (order_id: ', NEW.order_id, ', address_id: ', validate_address_id));
+
+END IF;
+
+END
+260330  8:30:05	     8 Query	CREATE TRIGGER trg_payment_success
+AFTER INSERT ON payments
+FOR EACH ROW
+BEGIN
+DECLARE validate_address_id INT;
+DECLARE validate_shipment_id INT;
+
+IF NEW.payment_status = 'COMPLETED' THEN
+
+SELECT address_id INTO validate_address_id FROM orders
+WHERE order_id = NEW. order_id;
+
+UPDATE orders SET status = 'PAID' WHERE order_id = NEW.order_id;
+
+INSERT INTO shipments(order_id, address_id, shipment_date, status)
+VALUES(NEW.order_id, validate_address_id, DATE_ADD(NOW(), INTERVAL 2 DAY), 'SHIPPED');
+
+SET validate_shipment_id = LAST_INSERT_ID();
+
+INSERT INTO audit_logs(table_name, action_type, record_id, description)
+VALUES('payments', 'INSERT', NEW.payment_id, CONCAT('Payment completed. Order marked as PAID'));
+
+INSERT INTO audit_logs(table_name, action_type, record_id, description)
+
+VALUES('shipments', 'INSERT', validate_shipment_id, CONCAT('Shipment created (order_id: ', NEW.order_id, ', address_id: ', validate_address_id));
+
+END IF;
+
+END
+260330  8:36:28	     8 Query	CREATE PROCEDURE sp_cancel_order(
+IN sp_order_id INT
+)
+BEGIN
+UPDATE orders SET status = 'CANCELLED' WHERE order_id = sp_order_id;
+END
+260330  8:39:32	     8 Query	ALTER TABLE shipments MODIFY status ENUM('PENDING', 'SHIPPED', 'DELIVERED', 'CANCELLED') NOT NULL DEFAULT 'PENDING'
+260330  8:39:40	     8 Query	DESC shipments
+260330  8:43:32	     8 Query	CREATE TRIGGER trg_order_cancel
+	AFTER UPDATE ON orders
+FOR EACH ROW
+BEGIN
+IF OLD.status <> 'CANCELLED' AND NEW.status = 'CANCELLED' THEN
+
+UPDATE shipments SET status = 'CANCELLED' WHERE order_id =
+260330  8:45:36	     8 Query	CREATE TRIGGER trg_order_cancel
+AFTER UPDATE ON orders
+FOR EACH ROW
+BEGIN
+IF OLD.status <> 'CANCELLED' AND NEW.status = 'CANCELLED' THEN
+
+UPDATE shipments SET status = 'CANCELLED' WHERE order_id = NEW.order_id;
+
+INSERT INTO audit_logs(table_name
+260330  8:51:15	     8 Query	CREATE TRIGGER trg_order_cancel
+AFTER UPDATE ON orders
+FOR EACH ROW
+BEGIN
+DECLARE validate_shipment_id INT;
+
+IF OLD.status <> 'CANCELLED' AND NEW.status = 'CANCELLED' THEN
+
+SELECT shipment_id INTO validate_shipment_id FROM shipments
+WHERE order_id = NEW.order_id
+LIMIT 1;
+
+UPDATE shipments SET status = 'CANCELLED' WHERE order_id = NEW.order_id;
+
+INSERT INTO audit_logs(table_name, action_type, record_id, description)
+VALUES ('orders', 'UPDATE', NEW.order_id, 'Order cancelled');
+
+IF validate_shipment_id IS NOT NULL THEN
+INSERT INTO audit_logs(table_name, action_type, record_id, description)
+VALUES ('shipments', 'UPDATE', validate_shipment_id, CONCAT('Shipment cancelled for order_id: ', NEW.order_id));
+END IF;
+
+END IF;
+
+END
+260330  9:15:22	     8 Query	DROP TRIGGER trg_order_cancel
+260330  9:24:21	     8 Query	CREATE TRIGGER trg_order_cancel
+AFTER UPDATE ON orders
+FOR EACH ROW
+BEGIN
+DECLARE validate_shipment_id INT;
+
+IF OLD.status <> 'CANCELLED' AND NEW.status = 'CANCELLED' THEN
+
+UPDATE inventory i
+JOIN order_items oi ON i.product_id = oi.product_id
+SET i.stock_quantity = i.stock_quantity + oi.quantity
+WHERE oi.order_id = NEW.order_id;
+
+UPDATE products p
+JOIN inventory i ON p.product_id = i.product_id
+SET p.status = 'ACTIVE'
+WHERE i.stock_quantity > 0;
+
+SELECT shipment_id INTO validate_shipment_id FROM shipments
+WHERE order_id = NEW.order_id
+LIMIT 1;
+
+UPDATE shipments SET status = 'CANCELLED'
+WHERE order_id = NEW.order_id;
+
+INSERT INTO audit_logs(table_name, action_type, record_id, description)
+VALUES ('orders', 'UPDATE', NEW.order_id, 'Order cancelled. Inventory restored');
+IF validate_shipment_id IS NOT NULL THEN
+INSERT INTO audit_logs(table_name, action_type, record_id, description)
+VALUES ('shipments', 'UPDATE', validate_shipment_id, CONCAT('Shipment cancelled for order_id: ', NEW.order_id));
+END IF;
+
+END IF;
+
+END
+260330  9:48:22	     8 Query	DROP PROCEDURE sp_place_order
+260330  9:59:18	     8 Query	CREATE PROCEDURE sp_place_order(
+IN sp_customer_id INT,
+IN sp_address_id INT
+)
+BEGIN
+DECLARE validate_cart_id INT;
+DECLARE validate_order_id INT;
+DECLARE validate_total DECIMAL(12,2);
+
+START TRANSACTION;
+
+SELECT cart_id INTO validate_cart_id FROM cart WHERE customer_id = sp_customer_id;
+
+IF EXISTS(
+SELECT 1 FROM cart_items ci
+JOIN inventory i ON ci.product_id = i.product_id
+WHERE ci.cart_id = validate_cart_id
+AND i.stock_quantity < ci.quantity
+)
+THEN
+SIGNAL SQLSTATE '45000'
+SET MESSAGE_TEXT = 'Insufficient stock for one or more products';
+END IF;
+
+INSERT INTO orders(order_uuid, customer_id, address_id, status, total_amount)
+VALUES(UUID(), sp_customer_id, sp_address_id, 'PLACED', 0);
+
+SET validate_order_id = LAST_INSERT_ID();
+
+INSERT INTO order_items(order_id, product_id, quantity, price)
+SELECT validate_order_id, ci.product_id, ci.quantity, p.price
+FROM cart_items ci
+JOIN products p ON ci.product_id = p.product_id
+WHERE ci.cart_id = validate_cart_id;
+
+UPDATE inventory i
+JOIN cart_items ci ON i.product_id = ci.product_id
+SET i.stock_quantity = i.stock_quantity - ci.quantity
+WHERE ci.cart_id = validate_cart_id;
+
+SELECT fn_calculate_order_total(validate_order_id) INTO validate_total;
+
+UPDATE orders SET total_amount = validate_total
+WHERE order_id = validate_order_id;
+
+DELETE FROM cart_items WHERE cart_id = validate_cart_id;
+
+COMMIT;
+
+END
+260330 10:09:12	     8 Query	CREATE TRIGGER trg_inventory_alerts
+AFTER UPDATE ON inventory
+FOR EACH ROW
+BEGIN
+
+IF NEW.stock_quantity < 10 AND OLD.stock_quantity >= 10 THEN
+INSERT INTO audit_logs(table_name, action_type, record_id, description)
+VALUES ('inventory', 'UPDATE', NEW.inventory_id, CONCAT('LOW STOCK ALERT - product_id: ', NEW.product_id, ', stock_quantity: ', NEW.stock_quantity));
+END IF;
+
+IF NEW.stock_quantity < 3 AND OLD.stock_quantity >= 3 THEN
+INSERT INTO audit_logs(table_name, action_type, record_id, description)
+VALUES ('inventory', 'UPDATE', NEW.inventory_id, CONCAT('CRITICAL STOCK ALERT - product_id: ', NEW.product_id, ', stock_quantity: ', NEW.stock_quantity));
+END IF;
+
+IF NEW.stock_quantity = 0 AND OLD.stock_quantity > 0 THEN
+
+UPDATE products SET status = 'INACTIVE'
+WHERE product_id = NEW.product_id;
+
+INSERT INTO audit_logs(table_name, action_type, record_id, description)
+VALUES ('inventory', 'UPDATE', NEW.inventory_id, CONCAT('OUT OF STOCK - product_id: ', NEW.product_id));
+
+INSERT INTO audit_logs(table_name, action_type, record_id, description)
+VALUES ('products', 'UPDATE', NEW.product_id, 'Product auto-disabled due to zero stock');
+END IF;
+
+END
+260330 10:20:35	     8 Query	CREATE FUNCTION fn_total_orders_by_customer(
+fn_customer_id INT
+)
+RETURNS INT
+DETERMINISTIC
+BEGIN
+DECLARE validate_count INT;
+
+SELECT COUNT(*) INTO valiadate
+260330 10:21:30	     8 Query	CREATE FUNCTION fn_total_orders_by_customer(
+fn_customer_id INT
+)
+RETURNS INT
+DETERMINISTIC
+BEGIN
+DECLARE validate_count INT;
+
+SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id = fn_customer_id;
+RETURN validate_count;
+END
+260330 10:23:59	     8 Query	CREATE FUNCTION fn_total_spent_by_customer(
+fn_customer_id INT
+)
+RETURNS DECIMAL(12,2)
+DETERMINISTIC
+BEGIN
+DECLARE validate_total DECIMAL(12,2);
+
+SELECT SUM(total_amount) INTO validate_total FROM orders
+WHERE customer_id = fn_customer_id 
+AND status IN ('PAID','DELIVERED');
+
+RETURN IFNULL(validate_total,0);
+
+END
+260330 10:24:18	     8 Query	DROP FUNCTION fn_total_spent_by_customer
+260330 10:24:38	     8 Query	CREATE FUNCTION fn_total_spent_by_customer(
+fn_customer_id INT
+)
+RETURNS DECIMAL(12,2)
+DETERMINISTIC
+BEGIN
+DECLARE validate_total DECIMAL(12,2);
+SELECT SUM(total_amount) INTO validate_total FROM orders
+WHERE customer_id = fn_customer_id
+260330 10:25:07	     8 Query	CREATE FUNCTION fn_total_spent_by_customer(
+fn_customer_id INT
+)
+RETURNS DECIMAL(12,2)
+DETERMINISTIC
+BEGIN
+DECLARE validate_total DECIMAL(12,2);
+
+SELECT SUM(total_amount) INTO validate_total FROM orders
+WHERE customer_id = fn_customer_id 
+AND status IN ('PAID','DELIVERED');
+
+RETURN IFNULL(validate_total,0);
+
+END
+260330 10:27:20	     8 Query	CREATE FUNCTION fn_check_stock(
+fn_product_id INT
+)
+RETURNS INT
+DETERMINISTIC
+BEGIN
+DECLARE validate_stock INT;
+
+SELECT SUM(stock_quantity) INTO validate_stock FROM inventory WHERE product_id = fn_product_id;
+
+RETURN IFNULL(validate_stock,0);
+END
+260330 10:30:21	     8 Query	CREATE FUNCTION fn_order_status_label(
+fn_status VARCHAR(20))
+260330 10:34:39	     8 Query	CREATE FUNCTION fn_order_status(
+fn_order_id INT
+)
+RETURNS VARCHAR(50)
+READS SQL DATA
+BEGIN
+DECLARE validate_status VARCHAR(20);
+
+SELECT status INTO validate_status FROM orders
+WHERE order_id = fn_order_id;
+
+RETURN CASE
+WHEN validate_status = 'PLACED' THEN 'Order Placed'
+WHEN validate_status = 'PAID' THEN 'Payment Completed'
+WHEN validate_status = 'SHIPPED' THEN 'In Transit'
+WHEN validate_status = 'DELIVERED' THEN 'Order Delivered'
+WHEN validate_status = 'CANCELLED' THEN 'Order Cancelled'
+ELSE 'Unknown'
+END;
+
+END
+260330 10:47:08	     8 Query	CALL sp_create_customer('Aarav Mehta', 'aarav1@test.com', '9000000001');
+CALL sp_create_customer('Vivaan Sharma', 'vivaan2@test.com', '9000000002');
+CALL sp_create_customer('Aditya Verma', 'aditya3@test.com', '9000000003');
+CALL sp_create_customer('Vihaan Kapoor', 'vihaan4@test.com', '9000000004');
+CALL sp_create_customer('Arjun Singh', 'arjun5@test.com', '9000000005');
+CALL sp_create_customer('Sai Kumar', 'sai6@test.com', '9000000006');
+CALL sp_create_customer('Krishna Patel', 'krishna7@test.com', '9000000007');
+CALL sp_create_customer('Ishaan Gupta', 'ishaan8@test.com', '9000000008');
+CALL sp_create_customer('Rohan Das', 'rohan9@test.com', '9000000009');
+CALL sp_create_customer('Kabir Joshi', 'kabir10@test.com', '9000000010');
+
+CALL sp_create_customer('Anaya Shah', 'anaya11@test.com', '9000000011');
+CALL sp_create_customer('Diya Nair', 'diya12@test.com', '9000000012');
+CALL sp_create_customer('Myra Iyer', 'myra13@test.com', '9000000013');
+CALL sp_create_customer('Aadhya Rao', 'aadhya14@test.com', '9000000014');
+CALL sp_create_customer('Sara Khan', 'sara15@test.com', '9000000015');
+CALL sp_create_customer('Riya Choudhary', 'riya16@test.com', '9000000016');
+CALL sp_create_customer('Meera Pillai', 'meera17@test.com', '9000000017');
+CALL sp_create_customer('Pooja Reddy', 'pooja18@test.com', '9000000018');
+CALL sp_create_customer('Neha Kulkarni', 'neha19@test.com', '9000000019');
+CALL sp_create_customer('Simran Kaur', 'simran20@test.com', '9000000020');
+
+CALL sp_create_customer('Rahul Jain', 'rahul21@test.com', '9000000021');
+CALL sp_create_customer('Amit Tiwari', 'amit22@test.com', '9000000022');
+CALL sp_create_customer('Deepak Yadav', 'deepak23@test.com', '9000000023');
+CALL sp_create_customer('Suresh Naidu', 'suresh24@test.com', '9000000024');
+CALL sp_create_customer('Manish Bansal', 'manish25@test.com', '9000000025');
+CALL sp_create_customer('Nikhil Arora', 'nikhil26@test.com', '9000000026');
+CALL sp_create_customer('Varun Malhotra', 'varun27@test.com', '9000000027');
+CALL sp_create_customer('Karan Oberoi', 'karan28@test.com', '9000000028');
+CALL sp_create_customer('Tarun Khanna', 'tarun29@test.com', '9000000029');
+CALL sp_create_customer('Yash Sinha', 'yash30@test.com', '9000000030');
+
+CALL sp_create_customer('Sneha Bose', 'sneha31@test.com', '9000000031');
+CALL sp_create_customer('Priya Sen', 'priya32@test.com', '9000000032');
+CALL sp_create_customer('Ankita Ghosh', 'ankita33@test.com', '9000000033');
+CALL sp_create_customer('Ritika Dutta', 'ritika34@test.com', '9000000034');
+CALL sp_create_customer('Shreya Banerjee', 'shreya35@test.com', '9000000035');
+CALL sp_create_customer('Tanya Mukherjee', 'tanya36@test.com', '9000000036');
+CALL sp_create_customer('Isha Chakraborty', 'isha37@test.com', '9000000037');
+CALL sp_create_customer('Naina Paul', 'naina38@test.com', '9000000038');
+CALL sp_create_customer('Kavya Roy', 'kavya39@test.com', '9000000039');
+CALL sp_create_customer('Pallavi Dey', 'pallavi40@test.com', '9000000040');
+
+CALL sp_create_customer('Harsh Vardhan', 'harsh41@test.com', '9000000041');
+CALL sp_create_customer('Dev Chauhan', 'dev42@test.com', '9000000042');
+CALL sp_create_customer('Lakshya Aggarwal', 'lakshya43@test.com', '9000000043');
+CALL sp_create_customer('Ritesh Pandey', 'ritesh44@test.com', '9000000044');
+CALL sp_create_customer('Gaurav Mishra', 'gaurav45@test.com', '9000000045');
+CALL sp_create_customer('Shivam Dubey', 'shivam46@test.com', '9000000046');
+CALL sp_create_customer('Abhishek Tripathi', 'abhishek47@test.com', '9000000047');
+CALL sp_create_customer('Prateek Srivastava', 'prateek48@test.com', '9000000048');
+CALL sp_create_customer('Vikas Shukla', 'vikas49@test.com', '9000000049');
+CALL sp_create_customer('Ajay Pathak', 'ajay50@test.com', '9000000050')
+260330 10:47:32	     8 Query	SELECT * FROM customers
+260330 10:48:15	     8 Query	SELECT * FROM audit_logs
+260330 10:49:22	     8 Query	TRUNCATE TABLE customers
+260330 10:50:02	     8 Query	SET FOREIGN_KEY_CHECKS = 0
+260330 10:50:05	     8 Query	TRUNCATE TABLE customers
+260330 10:50:13	     8 Query	TRUNCATE TABLE audit_logs
+260330 10:50:20	     8 Query	SET FOREIGN_KEY_CHECKS = 1
+260330 10:51:12	     8 Query	CALL sp_create_customer('Aarav Mehta', 'aarav.mehta@gmail.com', '9876500001')
+260330 10:51:27	     8 Query	CALL sp_create_customer('Vivaan Sharma', 'vivaan.sharma@yahoo.com', '9876500002')
+260330 10:51:48	     8 Query	CALL sp_create_customer('Aditya Verma', 'aditya.verma@outlook.com', '9876500003')
+260330 10:51:59	     8 Query	CALL sp_create_customer('Vihaan Kapoor', 'vihaan.kapoor@icloud.com', '9876500004')
+260330 10:52:16	     8 Query	CALL sp_create_customer('Arjun Singh', 'arjun.singh@gmail.com', '9876500005')
+260330 10:52:34	     8 Query	CALL sp_create_customer('Sai Kumar', 'sai.kumar@rediffmail.com', '9876500006')
+260330 10:52:54	     8 Query	CALL sp_create_customer('Krishna Patel', 'krishna.patel@gmail.com', '9876500007')
+260330 10:53:05	     8 Query	CALL sp_create_customer('Ishaan Gupta', 'ishaan.gupta@yahoo.com', '9876500008')
+260330 10:53:14	     8 Query	CALL sp_create_customer('Rohan Das', 'rohan.das@outlook.com', '9876500009')
+260330 10:53:23	     8 Query	CALL sp_create_customer('Kabir Joshi', 'kabir.joshi@gmail.com', '9876500010')
+260330 10:53:32	     8 Query	CALL sp_create_customer('Anaya Shah', 'anaya.shah@gmail.com', '9876500011')
+260330 10:53:39	     8 Query	CALL sp_create_customer('Diya Nair', 'diya.nair@icloud.com', '9876500012')
+260330 10:53:48	     8 Query	CALL sp_create_customer('Myra Iyer', 'myra.iyer@yahoo.com', '9876500013')
+260330 10:53:56	     8 Query	CALL sp_create_customer('Aadhya Rao', 'aadhya.rao@gmail.com', '9876500014')
+260330 10:54:04	     8 Query	CALL sp_create_customer('Sara Khan', 'sara.khan@outlook.com', '9876500015')
+260330 10:54:12	     8 Query	CALL sp_create_customer('Riya Choudhary', 'riya.choudhary@gmail.com', '9876500016')
+260330 10:54:19	     8 Query	CALL sp_create_customer('Meera Pillai', 'meera.pillai@rediffmail.com', '9876500017')
+260330 10:54:32	     8 Query	CALL sp_create_customer('Pooja Reddy', 'pooja.reddy@gmail.com', '9876500018')
+260330 10:54:41	     8 Query	CALL sp_create_customer('Neha Kulkarni', 'neha.kulkarni@yahoo.com', '9876500019')
+260330 10:54:48	     8 Query	CALL sp_create_customer('Simran Kaur', 'simran.kaur@gmail.com', '9876500020')
+260330 10:54:58	     8 Query	CALL sp_create_customer('Rahul Jain', 'rahul.jain@outlook.com', '9876500021')
+260330 10:55:06	     8 Query	CALL sp_create_customer('Amit Tiwari', 'amit.tiwari@gmail.com', '9876500022')
+260330 10:55:15	     8 Query	CALL sp_create_customer('Deepak Yadav', 'deepak.yadav@yahoo.com', '9876500023')
+260330 10:55:23	     8 Query	CALL sp_create_customer('Suresh Naidu', 'suresh.naidu@gmail.com', '9876500024')
+260330 10:55:32	     8 Query	CALL sp_create_customer('Manish Bansal', 'manish.bansal@icloud.com', '9876500025')
+260330 10:55:40	     8 Query	CALL sp_create_customer('Nikhil Arora', 'nikhil.arora@gmail.com', '9876500026')
+260330 10:55:48	     8 Query	CALL sp_create_customer('Varun Malhotra', 'varun.malhotra@yahoo.com', '9876500027')
+260330 10:55:56	     8 Query	CALL sp_create_customer('Karan Oberoi', 'karan.oberoi@gmail.com', '9876500028')
+260330 10:56:04	     8 Query	CALL sp_create_customer('Tarun Khanna', 'tarun.khanna@outlook.com', '9876500029')
+260330 10:56:12	     8 Query	CALL sp_create_customer('Yash Sinha', 'yash.sinha@gmail.com', '9876500030')
+260330 10:56:20	     8 Query	CALL sp_create_customer('Sneha Bose', 'sneha.bose@yahoo.com', '9876500031')
+260330 10:56:27	     8 Query	CALL sp_create_customer('Priya Sen', 'priya.sen@gmail.com', '9876500032')
+260330 10:56:34	     8 Query	CALL sp_create_customer('Ankita Ghosh', 'ankita.ghosh@icloud.com', '9876500033')
+260330 10:56:44	     8 Query	CALL sp_create_customer('Ritika Dutta', 'ritika.dutta@gmail.com', '9876500034')
+260330 10:56:51	     8 Query	CALL sp_create_customer('Shreya Banerjee', 'shreya.banerjee@yahoo.com', '9876500035')
+260330 10:56:58	     8 Query	CALL sp_create_customer('Tanya Mukherjee', 'tanya.mukherjee@gmail.com', '9876500036')
+260330 10:57:16	     8 Query	CALL sp_create_customer('Isha Chakraborty', 'isha.chakraborty@outlook.com', '9876500037')
+260330 10:57:24	     8 Query	CALL sp_create_customer('Naina Paul', 'naina.paul@gmail.com', '9876500038')
+260330 10:57:32	     8 Query	CALL sp_create_customer('Kavya Roy', 'kavya.roy@yahoo.com', '9876500039')
+260330 10:57:39	     8 Query	CALL sp_create_customer('Pallavi Dey', 'pallavi.dey@gmail.com', '9876500040')
+260330 10:57:51	     8 Query	CALL sp_create_customer('Harsh Vardhan', 'harsh.vardhan@gmail.com', '9876500041')
+260330 10:58:11	     8 Query	CALL sp_create_customer('Dev Chauhan', 'dev.chauhan@outlook.com', '9876500042')
+260330 10:58:20	     8 Query	CALL sp_create_customer('Lakshya Aggarwal', 'lakshya.aggarwal@gmail.com', '9876500043')
+260330 10:58:29	     8 Query	CALL sp_create_customer('Ritesh Pandey', 'ritesh.pandey@yahoo.com', '9876500044')
+260330 10:58:40	     8 Query	CALL sp_create_customer('Gaurav Mishra', 'gaurav.mishra@gmail.com', '9876500045')
+260330 10:58:49	     8 Query	CALL sp_create_customer('Shivam Dubey', 'shivam.dubey@icloud.com', '9876500046')
+260330 10:58:58	     8 Query	CALL sp_create_customer('Abhishek Tripathi', 'abhishek.tripathi@gmail.com', '9876500047')
+260330 10:59:07	     8 Query	CALL sp_create_customer('Prateek Srivastava', 'prateek.srivastava@yahoo.com', '9876500048')
+260330 10:59:15	     8 Query	CALL sp_create_customer('Vikas Shukla', 'vikas.shukla@gmail.com', '9876500049')
+260330 10:59:23	     8 Query	CALL sp_create_customer('Ajay Pathak', 'ajay.pathak@outlook.com', '9876500050')
+260330 10:59:33	     8 Query	SELECT * FROM customers
+260330 11:03:00	     8 Query	SELECT * FROM audit_logs
+260330 11:04:48	     8 Query	CALL sp_create_address(1, 'Home', 'Flat 101, Sunrise Apartments', 'Near Andheri Station', 'Mumbai', 'Maharashtra', 'India', '400001')
+260330 11:05:15	     8 Query	CALL sp_create_address(1, 'Work', 'Office 402, Business Park', 'BKC Road', 'Mumbai', 'Maharashtra', 'India', '400051')
+260330 11:05:45	     8 Query	CALL sp_create_address(2, 'Home', 'House 12, Sector 21', 'Near Metro Station', 'Delhi', 'Delhi', 'India', '110021')
+260330 11:06:01	     8 Query	CALL sp_create_address(3, 'Home', 'Flat 302, Green Heights', 'Whitefield Road', 'Bangalore', 'Karnataka', 'India', '560066')
+260330 11:06:15	     8 Query	CALL sp_create_address(3, 'Work', 'IT Park Tower 5', 'Outer Ring Road', 'Bangalore', 'Karnataka', 'India', '560103')
+260330 11:06:28	     8 Query	CALL sp_create_address(4, 'Home', 'Bungalow 45, Civil Lines', 'Near Mall Road', 'Lucknow', 'Uttar Pradesh', 'India', '226001')
+260330 11:06:43	     8 Query	CALL sp_create_address(5, 'Home', 'Flat 10A, Marine Drive', 'Opp Sea Face', 'Mumbai', 'Maharashtra', 'India', '400020')
+260330 11:06:58	     8 Query	CALL sp_create_address(5, 'Other', 'Farmhouse Plot 7', 'Karjat Road', 'Karjat', 'Maharashtra', 'India', '410201')
+260330 11:07:18	     8 Query	CALL sp_create_address(6, 'Home', 'House 78, Jubilee Hills', 'Road No 10', 'Hyderabad', 'Telangana', 'India', '500033')
+260330 11:07:34	     8 Query	CALL sp_create_address(7, 'Home', 'Flat 22B, Satellite Area', 'Near Iskcon Temple', 'Ahmedabad', 'Gujarat', 'India', '380015')
+260330 11:07:50	     8 Query	CALL sp_create_address(7, 'Work', 'Corporate Office Block A', 'SG Highway', 'Ahmedabad', 'Gujarat', 'India', '380054')
+260330 11:08:06	     8 Query	CALL sp_create_address(8, 'Home', 'Flat 5C, Salt Lake', 'Sector V', 'Kolkata', 'West Bengal', 'India', '700091')
+260330 11:08:18	     8 Query	CALL sp_create_address(9, 'Home', 'Villa 9, Beach Road', 'Besant Nagar', 'Chennai', 'Tamil Nadu', 'India', '600090')
+260330 11:08:32	     8 Query	CALL sp_create_address(10, 'Home', 'Flat 303, Koregaon Park', 'Lane 5', 'Pune', 'Maharashtra', 'India', '411001')
+260330 11:08:47	     8 Query	CALL sp_create_address(10, 'Work', 'Tech Park Phase 2', 'Hinjewadi', 'Pune', 'Maharashtra', 'India', '411057')
+260330 11:09:01	     8 Query	CALL sp_create_address(11, 'Home', 'Flat 18, DLF Phase 3', 'Near Cyber Hub', 'Gurgaon', 'Haryana', 'India', '122002')
+260330 11:09:13	     8 Query	CALL sp_create_address(12, 'Home', 'House 67, Vaishali Nagar', 'Near Mall', 'Jaipur', 'Rajasthan', 'India', '302021')
+260330 11:09:25	     8 Query	CALL sp_create_address(13, 'Home', 'Flat 9A, MG Road', 'Near Brigade Road', 'Bangalore', 'Karnataka', 'India', '560001')
+260330 11:09:40	     8 Query	CALL sp_create_address(14, 'Home', 'Flat 6B, Panampilly Nagar', 'Near Metro', 'Kochi', 'Kerala', 'India', '682036')
+260330 11:09:52	     8 Query	CALL sp_create_address(15, 'Home', 'House 55, Aliganj', 'Near Park', 'Lucknow', 'Uttar Pradesh', 'India', '226024')
+260330 11:10:05	     8 Query	CALL sp_create_address(16, 'Home', 'Flat 404, Powai Heights', 'Near Lake', 'Mumbai', 'Maharashtra', 'India', '400076')
+260330 11:10:15	     8 Query	CALL sp_create_address(17, 'Home', 'Flat 2C, Sector 62', 'Near IT Park', 'Noida', 'Uttar Pradesh', 'India', '201301')
+260330 11:10:26	     8 Query	CALL sp_create_address(18, 'Home', 'Villa 21, Banjara Hills', 'Road No 12', 'Hyderabad', 'Telangana', 'India', '500034')
+260330 11:10:38	     8 Query	CALL sp_create_address(19, 'Home', 'Flat 8D, Park Street', 'Near Metro', 'Kolkata', 'West Bengal', 'India', '700016')
+260330 11:10:54	     8 Query	CALL sp_create_address(20, 'Home', 'House 90, Sector 15', 'Near Market', 'Chandigarh', 'Chandigarh', 'India', '160015')
+260330 11:11:03	     8 Query	SELECT * FROM address
+260330 11:11:52	     8 Query	SELECT * FROM audit_logs
+260330 11:15:38	     8 Query	SHOW PROCEDURES
+260330 11:15:49	     8 Query	SHOW PROCEDURES ON customers
+260330 11:16:20	     8 Query	SHOW PROCEDURE STATUS
+260330 11:18:25	     8 Query	SHOW TRIGGERS
+260330 11:19:04	     8 Query	CALL sp_create_category('Electronics')
+260330 11:19:13	     8 Query	CALL sp_create_category('Fashion')
+260330 11:19:23	     8 Query	CALL sp_create_category('Home & Kitchen')
+260330 11:19:31	     8 Query	CALL sp_create_category('Books')
+260330 11:19:38	     8 Query	CALL sp_create_category('Sports & Fitness')
+260330 11:19:47	     8 Query	SELECT * FROM categories
+260330 11:21:52	     8 Query	CALL sp_create_product('iPhone 14', 1, 79999.00, 'INR', 18.00)
+260330 11:22:00	     8 Query	CALL sp_create_product('Samsung Smart TV 55 inch', 1, 59999.00, 'INR', 18.00)
+260330 11:22:09	     8 Query	CALL sp_create_product('Sony Bluetooth Headphones', 1, 4999.00, 'INR', 18.00)
+260330 11:22:18	     8 Query	CALL sp_create_product('Men Casual Shirt', 2, 1299.00, 'INR', 12.00)
+260330 11:22:26	     8 Query	CALL sp_create_product('Women Kurti Set', 2, 1999.00, 'INR', 12.00)
+260330 11:22:41	     8 Query	CALL sp_create_product('Running Shoes', 2, 2999.00, 'INR', 12.00)
+260330 11:22:49	     8 Query	CALL sp_create_product('Mixer Grinder', 3, 3499.00, 'INR', 18.00)
+260330 11:22:59	     8 Query	CALL sp_create_product('Non-Stick Cookware Set', 3, 2599.00, 'INR', 18.00)
+260330 11:23:08	     8 Query	CALL sp_create_product('Water Purifier', 3, 8999.00, 'INR', 18.00)
+260330 11:23:16	     8 Query	CALL sp_create_product('Atomic Habits', 4, 499.00, 'INR', 5.00)
+260330 11:23:24	     8 Query	CALL sp_create_product('The Alchemist', 4, 399.00, 'INR', 5.00)
+260330 11:23:33	     8 Query	CALL sp_create_product('Rich Dad Poor Dad', 4, 450.00, 'INR', 5.00)
+260330 11:23:42	     8 Query	CALL sp_create_product('Yoga Mat', 5, 799.00, 'INR', 12.00)
+260330 11:23:49	     8 Query	CALL sp_create_product('Dumbbell Set 10kg', 5, 1999.00, 'INR', 12.00)
+260330 11:23:58	     8 Query	CALL sp_create_product('Cricket Bat', 5, 1499.00, 'INR', 12.00)
+260330 11:24:06	     8 Query	SELECT * FROM products
+260330 11:24:28	     8 Query	SELECT * FROM audit_logs
+260330 11:27:33	     8 Query	CALL sp_create_warehouse(
+    'Mumbai Central Warehouse',
+    'Plot 21, Industrial Estate, Andheri East',
+    'Mumbai',
+    '400069'
+)
+260330 11:39:07	     8 Query	CALL sp_create_warehouse(
+    'Delhi NCR Warehouse',
+    'Sector 63, Logistics Hub',
+    'Noida',
+    '201301'
+)
+260330 11:39:25	     8 Query	CALL sp_create_warehouse(
+    'Bangalore Distribution Center',
+    'Electronic City Phase 1',
+    'Bangalore',
+    '560100'
+)
+260330 11:39:37	     8 Query	CALL sp_create_warehouse(
+    'Hyderabad Storage Facility',
+    'Gachibowli Industrial Area',
+    'Hyderabad',
+    '500032'
+)
+260330 11:40:03	     8 Query	SELECT * FROM warehouse
+260330 11:40:41	     8 Query	SELECT * FROM audit_logs
+260330 11:44:01	     8 Query	CALL sp_add_inventory(1, 1, 25)
+260330 11:44:45	     8 Query	DROP PROCEDURE sp_add_inventory
+260330 11:45:15	     8 Query	CREATE PROCEDURE sp_add_inventory(
+    -> IN sp_product_id INT,
+    -> IN sp_warehouse_id INT,
+    -> IN sp_quantity INT
+    -> )
+    -> BEGIN
+    -> INSERT INTO inventory(product_id, warehouse_id, stock_quantity, status)
+260330 11:46:32	     8 Query	CREATE PROCEDURE sp_add_inventory(
+IN sp_product_id INT,
+IN sp_warehouse_id INT,
+IN sp_quantity INT
+)
+BEGIN
+INSERT INTO inventory(product_id, warehouse_id, stock_quantity, status)
+VALUES (sp_product_id, sp_warehouse_id, sp_quantity, 'ACTIVE');
+END
+260330 11:46:48	     8 Query	CALL sp_add_inventory(1, 1, 25)
+260330 11:47:13	     8 Query	DESC inventory
+260330 11:47:27	     8 Query	DROP PROCEDURE sp_add_inventory
+260330 11:48:11	     8 Query	CREATE PROCEDURE sp_add_inventory(
+IN sp_product_id INT,
+IN sp_warehouse_id INT,
+IN sp_quantity INT
+)
+BEGIN
+INSERT INTO inventory(product_id, warehouse_id, stock_quantity)
+VALUES (sp_product_id, sp_warehouse_id, sp_quantity);
+END
+260330 11:48:23	     8 Query	CALL sp_add_inventory(1, 1, 25)
+260330 11:50:21	     8 Query	CALL sp_add_inventory(2, 1, 12)
+260330 11:50:35	     8 Query	CALL sp_add_inventory(3, 1, 5)
+260330 11:50:45	     8 Query	CALL sp_add_inventory(4, 1, 2)
+260330 11:50:57	     8 Query	CALL sp_add_inventory(5, 2, 30)
+260330 11:51:04	     8 Query	CALL sp_add_inventory(6, 2, 8)
+260330 11:51:11	     8 Query	CALL sp_add_inventory(6, 2, 8)
+260330 11:52:08	     8 Query	SELECT * FROM inventory
+260330 11:52:25	     8 Query	TRUNCATE TABLE inventory
+260330 11:52:49	     8 Query	SELECT * FROM audit_logs
+260330 11:53:39	     8 Query	DELETE FROM audit_logs WHERE table_name = 'inventory'
+260330 11:53:45	     8 Query	SELECT * FROM audit_logs
+260330 11:53:56	     8 Query	DESC inventory
+260330 11:54:33	     8 Query	SELECT @@FOREIGN_KEY_CHECKS
+260330 11:55:05	     8 Query	CALL sp_add_inventory(1, 1, 25)
+260330 11:55:11	     8 Query	SELECT * FROM audit_logs
+260330 11:57:14	     8 Query	TRUNCATE TABLE customers
+		     8 Query	TRUNCATE TABLE address
+		     8 Query	TRUNCATE TABLE categories
+		     8 Query	TRUNCATE TABLE products
+		     8 Query	TRUNCATE TABLE warehouse
+		     8 Query	TRUNCATE TABLE inventory
+260330 11:57:27	     8 Query	SELECT FOREIGN_KEY_CHECKS=0
+260330 11:57:40	     8 Query	SET FOREIGN_KEY_CHECKS=0
+260330 11:57:44	     8 Query	TRUNCATE TABLE customers
+		     8 Query	TRUNCATE TABLE address
+		     8 Query	TRUNCATE TABLE categories
+		     8 Query	TRUNCATE TABLE products
+		     8 Query	TRUNCATE TABLE warehouse
+		     8 Query	TRUNCATE TABLE inventory
+260330 11:58:11	     8 Query	SELECT * FROM customers
+260330 11:58:32	     8 Query	DESC audit_logs
+260330 12:01:38	     8 Query	ALTER TABLE audit_logs AUTO_INCREMENT = 1
+260330 12:02:22	     8 Query	SET FOREIGN_KEY_CHECKS=1
+260330 12:02:27	     8 Query	CALL sp_create_customer('Aarav Mehta', 'aarav.mehta@gmail.com', '9876500001')
+260330 12:02:38	     8 Query	SELECT * FROM audit_logs
+260330 12:03:06	     8 Query	DELETE FROM audit_logs
+260330 12:03:10	     8 Query	ALTER TABLE audit_logs AUTO_INCREMENT = 1
+260330 12:03:18	     8 Query	SET FOREIGN_KEY_CHECKS=0
+260330 12:03:29	     8 Query	DELETE FROM customers
+260330 12:03:35	     8 Query	SET FOREIGN_KEY_CHECKS=1
+260330 12:03:40	     8 Query	CALL sp_create_customer('Aarav Mehta', 'aarav.mehta@gmail.com', '9876500001')
+260330 12:03:51	     8 Query	SELECT * FROM audit_logs
+260330 12:04:25	     8 Query	DELETE FROM customers
+260330 12:04:43	     8 Query	ALTER TABLE customers AUTO_INCREMENT = 1
+260330 12:04:53	     8 Query	DELETE FROM address
+260330 12:05:00	     8 Query	ALTER TABLE address AUTO_INCREMENT = 1
+260330 12:05:19	     8 Query	DELETE FROM categories
+260330 12:05:28	     8 Query	ALTER TABLE categories AUTO_INCREMENT = 1
+260330 12:05:36	     8 Query	DELETE FROM products
+260330 12:05:45	     8 Query	ALTER TABLE products AUTO_INCREMENT = 1
+260330 12:05:54	     8 Query	DELETE FROM warehouse
+260330 12:06:02	     8 Query	ALTER TABLE warehouse AUTO_INCREMENT = 1
+260330 12:06:09	     8 Query	DELETE FROM inventory
+260330 12:06:16	     8 Query	ALTER TABLE inventory AUTO_INCREMENT = 1
+260330 12:06:42	     8 Query	DELETE FROM audit_logs
+260330 12:06:54	     8 Query	ALTER TABLE audit_logs AUTO_INCREMENT = 1
+260330 12:07:05	     8 Query	SELECT @@FOREIGN_KEY_CHECKS
+260330 12:07:15	     8 Query	CALL sp_create_customer('Aarav Mehta', 'aarav.mehta@gmail.com', '9876500001')
+260330 12:07:32	     8 Query	SELECT * FROM customers
+		     8 Query	SELECT * FROM audit_logs
+260330 12:07:57	     8 Query	CALL sp_create_customer('Vivaan Sharma', 'vivaan.sharma@yahoo.com', '9876500002')
+260330 12:08:15	     8 Query	CALL sp_create_customer('Aditya Verma', 'aditya.verma@outlook.com', '9876500003')
+260330 12:08:23	     8 Query	CALL sp_create_customer('Vihaan Kapoor', 'vihaan.kapoor@icloud.com', '9876500004')
+260330 12:08:31	     8 Query	CALL sp_create_customer('Arjun Singh', 'arjun.singh@gmail.com', '9876500005')
+260330 12:08:40	     8 Query	CALL sp_create_customer('Sai Kumar', 'sai.kumar@rediffmail.com', '9876500006')
+260330 12:08:48	     8 Query	CALL sp_create_customer('Krishna Patel', 'krishna.patel@gmail.com', '9876500007')
+260330 12:08:55	     8 Query	CALL sp_create_customer('Ishaan Gupta', 'ishaan.gupta@yahoo.com', '9876500008')
+260330 12:09:03	     8 Query	CALL sp_create_customer('Rohan Das', 'rohan.das@outlook.com', '9876500009')
+260330 12:09:10	     8 Query	CALL sp_create_customer('Kabir Joshi', 'kabir.joshi@gmail.com', '9876500010')
+260330 12:09:18	     8 Query	CALL sp_create_customer('Anaya Shah', 'anaya.shah@gmail.com', '9876500011')
+260330 12:09:34	     8 Query	CALL sp_create_customer('Diya Nair', 'diya.nair@icloud.com', '9876500012')
+260330 12:09:42	     8 Query	CALL sp_create_customer('Myra Iyer', 'myra.iyer@yahoo.com', '9876500013')
+260330 12:09:50	     8 Query	CALL sp_create_customer('Aadhya Rao', 'aadhya.rao@gmail.com', '9876500014')
+260330 12:09:59	     8 Query	CALL sp_create_customer('Sara Khan', 'sara.khan@outlook.com', '9876500015')
+260330 12:10:08	     8 Query	CALL sp_create_customer('Riya Choudhary', 'riya.choudhary@gmail.com', '9876500016')
+260330 12:10:16	     8 Query	CALL sp_create_customer('Meera Pillai', 'meera.pillai@rediffmail.com', '9876500017')
+260330 12:10:25	     8 Query	CALL sp_create_customer('Pooja Reddy', 'pooja.reddy@gmail.com', '9876500018')
+260330 12:10:33	     8 Query	CALL sp_create_customer('Neha Kulkarni', 'neha.kulkarni@yahoo.com', '9876500019')
+260330 12:10:41	     8 Query	CALL sp_create_customer('Simran Kaur', 'simran.kaur@gmail.com', '9876500020')
+260330 12:10:50	     8 Query	CALL sp_create_customer('Rahul Jain', 'rahul.jain@outlook.com', '9876500021')
+260330 12:10:59	     8 Query	CALL sp_create_customer('Amit Tiwari', 'amit.tiwari@gmail.com', '9876500022')
+260330 12:11:09	     8 Query	CALL sp_create_customer('Deepak Yadav', 'deepak.yadav@yahoo.com', '9876500023')
+260330 12:11:19	     8 Query	CALL sp_create_customer('Suresh Naidu', 'suresh.naidu@gmail.com', '9876500024')
+260330 12:11:28	     8 Query	CALL sp_create_customer('Manish Bansal', 'manish.bansal@icloud.com', '9876500025')
+260330 12:11:35	     8 Query	CALL sp_create_customer('Nikhil Arora', 'nikhil.arora@gmail.com', '9876500026')
+260330 12:11:43	     8 Query	CALL sp_create_customer('Varun Malhotra', 'varun.malhotra@yahoo.com', '9876500027')
+260330 12:11:51	     8 Query	CALL sp_create_customer('Karan Oberoi', 'karan.oberoi@gmail.com', '9876500028')
+260330 12:11:58	     8 Query	CALL sp_create_customer('Tarun Khanna', 'tarun.khanna@outlook.com', '9876500029')
+260330 12:12:06	     8 Query	CALL sp_create_customer('Yash Sinha', 'yash.sinha@gmail.com', '9876500030')
+260330 12:12:15	     8 Query	CALL sp_create_customer('Sneha Bose', 'sneha.bose@yahoo.com', '9876500031')
+260330 12:12:30	     8 Query	CALL sp_create_customer('Priya Sen', 'priya.sen@gmail.com', '9876500032')
+260330 12:12:39	     8 Query	CALL sp_create_customer('Ankita Ghosh', 'ankita.ghosh@icloud.com', '9876500033')
+260330 12:12:49	     8 Query	CALL sp_create_customer('Ritika Dutta', 'ritika.dutta@gmail.com', '9876500034')
+260330 12:12:58	     8 Query	CALL sp_create_customer('Shreya Banerjee', 'shreya.banerjee@yahoo.com', '9876500035')
+260330 12:13:08	     8 Query	CALL sp_create_customer('Tanya Mukherjee', 'tanya.mukherjee@gmail.com', '9876500036')
+260330 12:13:17	     8 Query	CALL sp_create_customer('Isha Chakraborty', 'isha.chakraborty@outlook.com', '9876500037')
+260330 12:13:25	     8 Query	CALL sp_create_customer('Naina Paul', 'naina.paul@gmail.com', '9876500038')
+260330 12:13:35	     8 Query	CALL sp_create_customer('Kavya Roy', 'kavya.roy@yahoo.com', '9876500039')
+260330 12:13:43	     8 Query	CALL sp_create_customer('Pallavi Dey', 'pallavi.dey@gmail.com', '9876500040')
+260330 12:13:55	     8 Query	CALL sp_create_customer('Harsh Vardhan', 'harsh.vardhan@gmail.com', '9876500041')
+260330 12:14:03	     8 Query	CALL sp_create_customer('Dev Chauhan', 'dev.chauhan@outlook.com', '9876500042')
+260330 12:14:12	     8 Query	CALL sp_create_customer('Lakshya Aggarwal', 'lakshya.aggarwal@gmail.com', '9876500043')
+260330 12:14:21	     8 Query	CALL sp_create_customer('Ritesh Pandey', 'ritesh.pandey@yahoo.com', '9876500044')
+260330 12:14:30	     8 Query	CALL sp_create_customer('Gaurav Mishra', 'gaurav.mishra@gmail.com', '9876500045')
+260330 12:14:54	     8 Query	CALL sp_create_customer('Shivam Dubey', 'shivam.dubey@icloud.com', '9876500046')
+260330 12:15:03	     8 Query	CALL sp_create_customer('Abhishek Tripathi', 'abhishek.tripathi@gmail.com', '9876500047')
+260330 12:15:12	     8 Query	CALL sp_create_customer('Prateek Srivastava', 'prateek.srivastava@yahoo.com', '9876500048')
+260330 12:15:20	     8 Query	CALL sp_create_customer('Vikas Shukla', 'vikas.shukla@gmail.com', '9876500049')
+260330 12:15:29	     8 Query	CALL sp_create_customer('Ajay Pathak', 'ajay.pathak@outlook.com', '9876500050')
+260330 12:15:38	     8 Query	SELECT * FROM customers
+260330 12:16:56	     8 Query	SELECT * FROM audit_logs WHERE table_name = 'customers'
+260330 12:18:02	     8 Query	CALL sp_create_address(1, 'Home', 'Flat 101, Sunrise Apartments', 'Near Andheri Station', 'Mumbai', 'Maharashtra', 'India', '400001')
+260330 12:18:23	     8 Query	CALL sp_create_address(1, 'Work', 'Office 402, Business Park', 'BKC Road', 'Mumbai', 'Maharashtra', 'India', '400051')
+260330 12:18:43	     8 Query	CALL sp_create_address(2, 'Home', 'House 12, Sector 21', 'Near Metro Station', 'Delhi', 'Delhi', 'India', '110021')
+260330 12:18:57	     8 Query	CALL sp_create_address(3, 'Home', 'Flat 302, Green Heights', 'Whitefield Road', 'Bangalore', 'Karnataka', 'India', '560066')
+260330 12:19:10	     8 Query	CALL sp_create_address(3, 'Work', 'IT Park Tower 5', 'Outer Ring Road', 'Bangalore', 'Karnataka', 'India', '560103')
+260330 12:19:23	     8 Query	CALL sp_create_address(4, 'Home', 'Bungalow 45, Civil Lines', 'Near Mall Road', 'Lucknow', 'Uttar Pradesh', 'India', '226001')
+260330 12:19:37	     8 Query	CALL sp_create_address(5, 'Home', 'Flat 10A, Marine Drive', 'Opp Sea Face', 'Mumbai', 'Maharashtra', 'India', '400020')
+260330 12:19:48	     8 Query	CALL sp_create_address(5, 'Other', 'Farmhouse Plot 7', 'Karjat Road', 'Karjat', 'Maharashtra', 'India', '410201')
+260330 12:20:00	     8 Query	CALL sp_create_address(6, 'Home', 'House 78, Jubilee Hills', 'Road No 10', 'Hyderabad', 'Telangana', 'India', '500033')
+260330 12:20:10	     8 Query	CALL sp_create_address(7, 'Home', 'Flat 22B, Satellite Area', 'Near Iskcon Temple', 'Ahmedabad', 'Gujarat', 'India', '380015')
+260330 12:20:21	     8 Query	CALL sp_create_address(7, 'Work', 'Corporate Office Block A', 'SG Highway', 'Ahmedabad', 'Gujarat', 'India', '380054')
+260330 12:20:35	     8 Query	CALL sp_create_address(8, 'Home', 'Flat 5C, Salt Lake', 'Sector V', 'Kolkata', 'West Bengal', 'India', '700091')
+260330 12:20:47	     8 Query	CALL sp_create_address(9, 'Home', 'Villa 9, Beach Road', 'Besant Nagar', 'Chennai', 'Tamil Nadu', 'India', '600090')
+260330 12:20:58	     8 Query	CALL sp_create_address(10, 'Home', 'Flat 303, Koregaon Park', 'Lane 5', 'Pune', 'Maharashtra', 'India', '411001')
+260330 12:21:15	     8 Query	CALL sp_create_address(10, 'Work', 'Tech Park Phase 2', 'Hinjewadi', 'Pune', 'Maharashtra', 'India', '411057')
+260330 12:21:28	     8 Query	CALL sp_create_address(11, 'Home', 'Flat 18, DLF Phase 3', 'Near Cyber Hub', 'Gurgaon', 'Haryana', 'India', '122002')
+260330 12:21:43	     8 Query	CALL sp_create_address(12, 'Home', 'House 67, Vaishali Nagar', 'Near Mall', 'Jaipur', 'Rajasthan', 'India', '302021')
+260330 12:22:00	     8 Query	CALL sp_create_address(13, 'Home', 'Flat 9A, MG Road', 'Near Brigade Road', 'Bangalore', 'Karnataka', 'India', '560001')
+260330 12:22:19	     8 Query	CALL sp_create_address(14, 'Home', 'Flat 6B, Panampilly Nagar', 'Near Metro', 'Kochi', 'Kerala', 'India', '682036')
+260330 12:22:33	     8 Query	CALL sp_create_address(15, 'Home', 'House 55, Aliganj', 'Near Park', 'Lucknow', 'Uttar Pradesh', 'India', '226024')
+260330 12:22:45	     8 Query	CALL sp_create_address(16, 'Home', 'Flat 404, Powai Heights', 'Near Lake', 'Mumbai', 'Maharashtra', 'India', '400076')
+260330 12:22:58	     8 Query	CALL sp_create_address(17, 'Home', 'Flat 2C, Sector 62', 'Near IT Park', 'Noida', 'Uttar Pradesh', 'India', '201301')
+260330 12:23:10	     8 Query	CALL sp_create_address(18, 'Home', 'Villa 21, Banjara Hills', 'Road No 12', 'Hyderabad', 'Telangana', 'India', '500034')
+260330 12:23:20	     8 Query	CALL sp_create_address(19, 'Home', 'Flat 8D, Park Street', 'Near Metro', 'Kolkata', 'West Bengal', 'India', '700016')
+260330 12:23:34	     8 Query	CALL sp_create_address(20, 'Home', 'House 90, Sector 15', 'Near Market', 'Chandigarh', 'Chandigarh', 'India', '160015')
+260330 12:23:50	     8 Query	SELECT * FROM address
+260330 12:24:12	     8 Query	SELECT * FROM audit_logs WHERE table_name = 'address'
+260330 12:25:50	     8 Query	CALL sp_create_category('Electronics')
+260330 12:26:20	     8 Query	CALL sp_create_category('Fashion')
+260330 12:26:30	     8 Query	CALL sp_create_category('Home & Kitchen')
+260330 12:26:45	     8 Query	CALL sp_create_category('Books')
+260330 12:26:59	     8 Query	CALL sp_create_category('Sports & Fitness')
+260330 12:27:14	     8 Query	SELECT * FROM categories
+260330 12:27:25	     8 Query	SELECT * FROM audit_logs WHERE table_name = 'categories'
+260330 12:28:44	     8 Query	CALL sp_create_product('iPhone 14', 1, 79999.00, 'INR', 18.00)
+260330 12:28:56	     8 Query	CALL sp_create_product('Samsung Smart TV 55 inch', 1, 59999.00, 'INR', 18.00)
+260330 12:29:04	     8 Query	CALL sp_create_product('Sony Bluetooth Headphones', 1, 4999.00, 'INR', 18.00)
+260330 12:29:11	     8 Query	CALL sp_create_product('Men Casual Shirt', 2, 1299.00, 'INR', 12.00)
+260330 12:29:20	     8 Query	CALL sp_create_product('Women Kurti Set', 2, 1999.00, 'INR', 12.00)
+260330 12:29:28	     8 Query	CALL sp_create_product('Running Shoes', 2, 2999.00, 'INR', 12.00)
+260330 12:29:37	     8 Query	CALL sp_create_product('Mixer Grinder', 3, 3499.00, 'INR', 18.00)
+260330 12:29:45	     8 Query	CALL sp_create_product('Non-Stick Cookware Set', 3, 2599.00, 'INR', 18.00)
+260330 12:29:57	     8 Query	CALL sp_create_product('Water Purifier', 3, 8999.00, 'INR', 18.00)
+260330 12:30:08	     8 Query	CALL sp_create_product('Atomic Habits', 4, 499.00, 'INR', 5.00)
+260330 12:30:18	     8 Query	CALL sp_create_product('The Alchemist', 4, 399.00, 'INR', 5.00)
+260330 12:30:31	     8 Query	CALL sp_create_product('Rich Dad Poor Dad', 4, 450.00, 'INR', 5.00)
+260330 12:30:37	     8 Query	CALL sp_create_product('Yoga Mat', 5, 799.00, 'INR', 12.00)
+260330 12:30:45	     8 Query	CALL sp_create_product('Dumbbell Set 10kg', 5, 1999.00, 'INR', 12.00)
+260330 12:30:53	     8 Query	CALL sp_create_product('Cricket Bat', 5, 1499.00, 'INR', 12.00)
+260330 12:31:06	     8 Query	SELECT * FROM products
+260330 12:31:25	     8 Query	SELECT * FROM audit_logs WHERE table_name = 'products'
+260330 12:32:33	     8 Query	CALL sp_create_warehouse(
+    'Mumbai Central Warehouse',
+    'Plot 21, Industrial Estate, Andheri East',
+    'Mumbai',
+    '400069'
+)
+260330 12:32:47	     8 Query	CALL sp_create_warehouse(
+    'Delhi NCR Warehouse',
+    'Sector 63, Logistics Hub',
+    'Noida',
+    '201301'
+)
+260330 12:32:59	     8 Query	CALL sp_create_warehouse(
+    'Bangalore Distribution Center',
+    'Electronic City Phase 1',
+    'Bangalore',
+    '560100'
+)
+260330 12:33:09	     8 Query	CALL sp_create_warehouse(
+    'Hyderabad Storage Facility',
+    'Gachibowli Industrial Area',
+    'Hyderabad',
+    '500032'
+)
+260330 12:33:34	     8 Query	SELECT * FROM warehouse
+260330 12:33:47	     8 Query	SELECT * FROM audit_logs WHERE table_name = warehouse
+260330 12:33:53	     8 Query	SELECT * FROM audit_logs WHERE table_name = 'warehouse'
+260330 12:34:41	     8 Query	CALL sp_add_inventory(1, 1, 25)
+260330 12:34:50	     8 Query	CALL sp_add_inventory(2, 1, 12)
+260330 12:34:58	     8 Query	CALL sp_add_inventory(3, 1, 5)
+260330 12:35:08	     8 Query	CALL sp_add_inventory(4, 1, 2)
+260330 12:35:16	     8 Query	CALL sp_add_inventory(5, 2, 30)
+260330 12:35:24	     8 Query	CALL sp_add_inventory(6, 2, 8)
+260330 12:35:39	     8 Query	CALL sp_add_inventory(7, 2, 15)
+260330 12:35:47	     8 Query	CALL sp_add_inventory(8, 2, 1)
+260330 12:35:56	     8 Query	CALL sp_add_inventory(9, 3, 20)
+260330 12:36:04	     8 Query	CALL sp_add_inventory(10, 3, 0)
+260330 12:36:12	     8 Query	CALL sp_add_inventory(11, 3, 18)
+260330 12:36:22	     8 Query	CALL sp_add_inventory(12, 3, 6)
+260330 12:36:36	     8 Query	CALL sp_add_inventory(13, 4, 10)
+260330 12:36:45	     8 Query	CALL sp_add_inventory(14, 4, 3)
+260330 12:36:56	     8 Query	CALL sp_add_inventory(15, 4, 50)
+260330 12:37:31	     8 Query	SELECT * FROM inventory
+260330 12:37:55	     8 Query	SELECT * FROM audit_logs WHERE table_name = 'inventory'
+260330 12:38:12	     8 Query	SELECT * FROM audit_logs
+260330 12:38:40	     8 Query	SELECT 
+    p.product_name,
+    i.stock_quantity,
+    w.warehouse_name
+FROM inventory i
+JOIN products p ON i.product_id = p.product_id
+JOIN warehouse w ON i.warehouse_id = w.warehouse_id
+260330 12:38:55	     8 Query	SELECT * FROM products
+260330 12:39:21	     8 Query	SHOW TRIGGERS
+260330 12:52:05	     8 Query	CALL sp_add_to_cart(1, 1, 1)
+260330 12:59:39	     8 Query	SELECT * FROM cart
+		     8 Query	SELECT * FROM cart_items
+		     8 Query	SELECT * FROM audit_logs WHERE table_name IN ('cart','cart_items')
+260330 13:00:03	     8 Query	CALL sp_add_to_cart(1, 2, 2)
+260330 13:00:15	     8 Query	CALL sp_add_to_cart(1, 1, 1)
+260330 13:00:28	     8 Query	CALL sp_add_to_cart(2, 3, 1)
+260330 13:00:37	     8 Query	CALL sp_add_to_cart(2, 4, 2)
+260330 13:00:46	     8 Query	CALL sp_add_to_cart(2, 3, 2)
+260330 13:00:55	     8 Query	CALL sp_add_to_cart(3, 5, 1)
+260330 13:01:03	     8 Query	CALL sp_add_to_cart(3, 6, 1)
+260330 13:01:17	     8 Query	CALL sp_add_to_cart(4, 7, 3)
+260330 13:01:24	     8 Query	CALL sp_add_to_cart(4, 8, 1)
+260330 13:01:33	     8 Query	CALL sp_add_to_cart(4, 7, 2)
+260330 13:01:46	     8 Query	CALL sp_add_to_cart(5, 9, 1)
+260330 13:01:51	     8 Query	SELECT * FROM cart
+		     8 Query	SELECT * FROM cart_items
+		     8 Query	SELECT * FROM audit_logs WHERE table_name IN ('cart','cart_items')
+260330 13:06:29	     8 Query	SELECT * FROM cart
+260330 13:06:35	     8 Query	SELECT * FROM cart_items
+260330 13:06:58	     8 Query	SELECT * FROM audit_logs WHERE table_name = 'cart_items'
+260330 13:09:25	     8 Query	CALL sp_place_order(1, 1)
+260330 13:12:50	     8 Query	ALTER TABLES orders ADD COLUMN address_id INT NOT NULL, ADD CONSTRAINT fk_orders_address FOREIGN KEY (address_id) REFERENCES address(address_id)
+260330 13:13:16	     8 Query	ALTER TABLE orders ADD COLUMN address_id INT NOT NULL, ADD CONSTRAINT fk_orders_address FOREIGN KEY (address_id) REFERENCES address(address_id)
+260330 13:13:50	     8 Query	ALTER TABLE orders DROP COLUMN address_id
+260330 13:14:02	     8 Query	SET FOREIGN_KEY_CHECKS = 0
+260330 13:14:05	     8 Query	ALTER TABLE orders DROP COLUMN address_id
+260330 13:14:35	     8 Query	ALTER TABLE orders DROP CONSTRAINT fk_orders_address
+260330 13:14:38	     8 Query	ALTER TABLE orders DROP COLUMN address_id
+260330 13:14:43	     8 Query	SET FOREIGN_KEY_CHECKS = 1
+260330 13:15:13	     8 Query	DESC orders
+260330 13:15:44	     8 Query	ALTER TABLE orders ADD COLUMN address_id INT NOT NULL AFTER customer_id, ADD CONSTRAINT fk_orders_address FOREIGN KEY (address_id) REFERENCES address(address_id)
+260330 13:15:46	     8 Query	DESC orders
+260330 13:16:07	     8 Query	CALL sp_place_order(1, 1)
+260330 13:16:34	     8 Query	CALL sp_place_order(2, 3)
+260330 13:16:53	     8 Query	CALL sp_place_order(3, 4)
+260330 13:17:03	     8 Query	CALL sp_place_order(4, 6)
+260330 13:17:27	     8 Query	SELECT * FROM orders
+260330 13:17:45	     8 Query	SELECT * FROM order_items
+260330 13:17:55	     8 Query	SELECT * FROM cart_items
+260330 13:18:01	     8 Query	SELECT * FROM inventory
+260330 13:18:18	     8 Query	SELECT * FROM audit_logs
+260330 13:21:50	     8 Query	SELECT * FROM audit_logs WHERE table_name IN ('inventory','cart_items')
+260330 13:24:30	     8 Query	CALL sp_make_payment(1, 85000.00, 'UPI')
+260330 13:24:40	     8 Query	CALL sp_make_payment(2, 3200.00, 'Card')
+260330 13:24:54	     8 Query	SELECT * FROM payments
+260330 13:25:06	     8 Query	SELECT order_id, status FROM orders
+260330 13:25:15	     8 Query	SELECT * FROM shipments
+260330 13:25:22	     8 Query	SELECT shipment_date FROM shipments
+260330 13:25:40	     8 Query	SELECT * FROM audit_logs
+260330 13:25:52	     8 Query	SELECT * FROM audit_logs
+WHERE table_name IN ('payments', 'shipments')
+260330 13:28:24	     8 Query	CALL sp_cancel_order(1)
+260330 13:28:39	     8 Query	SELECT order_id, status 
+FROM orders 
+WHERE order_id = 1
+260330 13:28:52	     8 Query	SELECT order_id, status 
+FROM shipments 
+WHERE order_id = 1
+260330 13:29:00	     8 Query	SELECT *
+FROM audit_logs
+WHERE record_id = 1
+AND table_name IN ('orders', 'shipments')
+260330 13:30:23	     8 Query	SELECT order_id, status FROM orders
+260330 13:30:29	     8 Query	SELECT order_id, status FROM shipments
+260330 13:31:14	     8 Query	SELECT * FROM audit_logs
+260330 13:33:39	     8 Query	CALL sp_update_inventory(1, 2)
+260330 13:39:03	     8 Query	CREATE OR REPLACE PROCEDURE sp_update_inventory(
+    IN sp_inventory_id INT,
+    IN sp_quantity INT
+)
+BEGIN
+    UPDATE inventory
+    SET stock_quantity = sp_quantity
+    WHERE inventory_id = sp_inventory_id;
+END
+260330 13:39:15	     8 Query	CALL sp_update_inventory(1, 2)
+260330 13:39:46	     8 Query	SELECT * FROM audit_logs
+260330 13:42:59	     8 Query	CALL sp_update_customer(
+    3,
+    'Aditya Verma Updated',
+    '9998887777'
+)
+260330 13:43:19	     8 Query	SELECT * FROM customers WHERE customer_id = 3
+260330 13:44:23	     8 Query	SELECT * FROM audit_logs
+260330 13:44:55	     8 Query	SELECT * FROM audit_logs WHERE table_name = 'customers' AND action_type = 'UPDATE'
+260330 13:45:33	     8 Query	SELECT * FROM audit_logs WHERE table_name = 'inventory' AND action_type = 'UPDATE'
+260330 13:46:15	     8 Query	CALL sp_delete_warehouse(2)
+260330 13:46:25	     8 Query	SELECT * FROM warehouse
+260330 13:46:48	     8 Query	SELECT * FROM audit_logs WHERE table_name = 'warehouse'
+260330 13:49:40	     8 Query	CALL sp_delete_inventory(3)
+260330 13:51:57	     8 Query	CREATE OR REPLACE PROCEDURE sp_delete_inventory(
+    IN sp_inventory_id INT
+)
+BEGIN
+    DELETE FROM inventory
+    WHERE inventory_id = sp_inventory_id;
+END
+260330 13:52:05	     8 Query	CALL sp_delete_inventory(3)
+260330 13:52:14	     8 Query	SELECT * FROM inventory
+260330 13:52:39	     8 Query	SELECT * FROM audit_logs
+260330 13:53:06	     8 Query	SELECT * FROM audit_logs WHERE table_name = 'inventory' AND action_type = 'DELETE'
+260330 13:54:19	     8 Quit	
+c:\xampp\mysql\bin\mysqld.exe, Version: 10.4.32-MariaDB (mariadb.org binary distribution). started with:
+TCP Port: 3306, Named Pipe: C:/xampp/mysql/mysql.sock
+Time		    Id Command	Argument
+260330 14:51:46	     8 Query	SET GLOBAL log_output = 'FILE,TABLE'
+260330 14:51:54	     8 Query	SELECT DATABASE()
+		     8 Init DB	ordelix_oms_db
+260330 14:54:30	     8 Query	DROP TRIGGER trg_inventory_alerts
+260330 15:02:44	     8 Query	CREATE TRIGGER trg_inventory_alerts
+AFTER UPDATE ON inventory
+FOR EACH ROW
+BEGIN
+
+IF NEW.stock_quantity = 0 AND OLD.stock_quantity > 0 THEN
+UPDATE products
+SET status = 'INACTIVE' WHERE product_id = NEW.product_id;
+
+INSERT INTO audit_logs(table_name, action_type, record_id, description)
+VALUES ('inventory', 'UPDATE', NEW.inventory_id, CONCAT('OUT OF STOCK - product_id: ', NEW.product_id));
+
+INSERT INTO audit_logs(table_name, action_type, record_id, description)
+VALUES ('products', 'UPDATE', NEW.product_id, 'Product auto-disabled due to zero stock');
+
+ELSEIF NEW.stock_quantity < 3 AND OLD.stock_quantity >= 3 THEN
+INSERT INTO audit_logs(table_name, action_type, record_id, description)
+VALUES ('inventory', 'UPDATE', NEW.inventory_id, CONCAT('CRITICAL STOCK ALERT - product_id: ', NEW.product_id, ', stock_quantity: ', NEW.stock_quantity));
+
+ELSEIF NEW.stock_quantity < 10 AND OLD.stock_quantity >= 10 THEN
+INSERT INTO audit_logs(table_name, action_type, record_id, description)
+VALUES ('inventory', 'UPDATE', NEW.inventory_id, CONCAT('LOW STOCK ALERT - product_id: ', NEW.product_id, ', stock_quantity: ', NEW.stock_quantity));
+
+END IF;
+
+END
+260330 15:03:41	     8 Query	CALL sp_update_inventory(1, 2)
+260330 15:03:57	     8 Query	SELECT * FROM audit_logs
+260330 15:04:42	     8 Query	SELECT * FROM inventory
+260330 15:05:11	     8 Query	CALL sp_update_inventory(1, 1)
+260330 15:05:22	     8 Query	CALL sp_update_inventory(2, 9)
+260330 15:05:26	     8 Query	SELECT * FROM inventory
+260330 15:05:30	     8 Query	$
+260330 15:05:43	     8 Query	SELECT * FROM audit_logs
+260330 15:06:25	     8 Query	CALL sp_update_inventory(11, 2)
+260330 15:06:28	     8 Query	SELECT * FROM audit_logs
+c:\xampp\mysql\bin\mysqld.exe, Version: 10.4.32-MariaDB (mariadb.org binary distribution). started with:
+TCP Port: 3306, Named Pipe: C:/xampp/mysql/mysql.sock
+Time		    Id Command	Argument
+260330 15:11:31	     8 Query	SET GLOBAL log_output = 'FILE'
+260330 15:11:42	     8 Query	SELECT DATABASE()
+		     8 Init DB	ordelix_oms_db
+260330 15:12:36	     8 Query	SELECT 
+    o.order_id,
+    c.name AS customer_name,
+    o.total_amount,
+    o.status AS order_status,
+    p.payment_status,
+    s.status AS shipment_status
+FROM orders o
+JOIN customers c ON o.customer_id = c.customer_id
+LEFT JOIN payments p ON o.order_id = p.order_id
+LEFT JOIN shipments s ON o.order_id = s.order_id
+260330 15:12:54	     8 Query	SELECT 
+    p.product_name,
+    SUM(oi.quantity) AS total_sold,
+    SUM(oi.quantity * oi.price) AS revenue
+FROM order_items oi
+JOIN products p ON oi.product_id = p.product_id
+GROUP BY p.product_id
+260330 15:13:09	     8 Query	SELECT 
+    w.warehouse_name,
+    p.product_name,
+    i.stock_quantity
+FROM inventory i
+JOIN warehouse w ON i.warehouse_id = w.warehouse_id
+JOIN products p ON i.product_id = p.product_id
+260330 15:13:22	     8 Query	SELECT 
+    c.name,
+    a.city,
+    a.state
+FROM customers c
+JOIN address a ON c.customer_id = a.customer_id
+WHERE a.status = 'ACTIVE'
+260330 15:14:34	     8 Query	SELECT 
+    c.name,
+    a.address_name,
+    a.city,
+    a.state
+FROM customers c
+JOIN address a ON c.customer_id = a.customer_id
+WHERE a.status = 'ACTIVE'
+260330 15:14:46	     8 Query	SELECT 
+    c.name,
+    a.city,
+    a.state
+FROM customers c
+JOIN address a ON c.customer_id = a.customer_id
+WHERE a.status = 'ACTIVE'
+260330 15:14:52	     8 Query	SELECT 
+    o.order_id,
+    p.product_name,
+    oi.quantity,
+    oi.price
+FROM orders o
+JOIN order_items oi ON o.order_id = oi.order_id
+JOIN products p ON oi.product_id = p.product_id
+260330 15:15:42	     8 Query	SELECT 
+    o.order_id,
+    p.product_name,
+    oi.quantity,
+    oi.price
+FROM orders o
+JOIN order_items oi ON o.order_id = oi.order_id
+JOIN products p ON oi.product_id = p.product_id
+260330 15:15:56	     8 Query	SELECT 
+    c.customer_id,
+    c.name,
+    o.order_id,
+    o.total_amount
+FROM customers c
+INNER JOIN orders o 
+    ON c.customer_id = o.customer_id
+260330 15:16:09	     8 Query	SELECT 
+    c.customer_id,
+    c.name,
+    o.order_id
+FROM customers c
+LEFT JOIN orders o 
+    ON c.customer_id = o.customer_id
+260330 15:16:24	     8 Query	SELECT 
+    c.customer_id,
+    c.name,
+    o.order_id
+FROM customers c
+LEFT JOIN orders o 
+    ON c.customer_id = o.customer_id
+
+UNION
+
+SELECT 
+    c.customer_id,
+    c.name,
+    o.order_id
+FROM customers c
+RIGHT JOIN orders o 
+    ON c.customer_id = o.customer_id
+260330 15:16:40	     8 Query	SELECT 
+    c.customer_id,
+    c.name,
+    o.order_id
+FROM customers c
+LEFT JOIN orders o 
+    ON c.customer_id = o.customer_id
+
+UNION
+
+SELECT 
+    c.customer_id,
+    c.name,
+    o.order_id
+FROM customers c
+RIGHT JOIN orders o 
+    ON c.customer_id = o.customer_id
+260330 15:16:44	     8 Query	SELECT 
+    c.name,
+    p.product_name
+FROM customers c
+CROSS JOIN products p
+260330 15:17:04	     8 Quit	
+260330 15:17:12	     9 Connect	root@localhost as anonymous on 
+		     9 Query	select @@version_comment limit 1
+260330 15:17:18	     9 Query	SELECT DATABASE()
+		     9 Init DB	ordelix_oms_db
+260330 15:17:22	     9 Query	SELECT 
+    c1.name AS customer1,
+    c2.name AS customer2,
+    a1.city
+FROM customers c1
+JOIN address a1 ON c1.customer_id = a1.customer_id
+JOIN customers c2 
+    ON c1.customer_id <> c2.customer_id
+JOIN address a2 
+    ON c2.customer_id = a2.customer_id
+WHERE a1.city = a2.city
+260330 15:17:51	     9 Query	SELECT 
+    o.order_id,
+    c.name,
+    p.product_name,
+    oi.quantity,
+    pay.payment_status,
+    s.status AS shipment_status
+FROM orders o
+JOIN customers c ON o.customer_id = c.customer_id
+JOIN order_items oi ON o.order_id = oi.order_id
+JOIN products p ON oi.product_id = p.product_id
+LEFT JOIN payments pay ON o.order_id = pay.order_id
+LEFT JOIN shipments s ON o.order_id = s.order_id
+260330 15:25:23	     9 Query	CREATE VIEW vw_customer_spending AS
+SELECT 
+    c.customer_id,
+    c.name,
+    COUNT(o.order_id) AS total_orders,
+    SUM(o.total_amount) AS total_spent
+FROM customers c
+LEFT JOIN orders o ON c.customer_id = o.customer_id
+GROUP BY c.customer_id
+260330 15:25:38	     9 Query	SELECT * FROM vw_customer_spending
+260330 15:26:38	     9 Query	CREATE VIEW vw_order_lifecycle AS
+SELECT 
+    o.order_id,
+    c.name,
+    o.status AS order_status,
+    p.payment_status,
+    s.status AS shipment_status,
+    s.shipment_date
+FROM orders o
+JOIN customers c ON o.customer_id = c.customer_id
+LEFT JOIN payments p ON o.order_id = p.order_id
+LEFT JOIN shipments s ON o.order_id = s.order_id
+260330 15:26:55	     9 Query	SELECT * FROM vw_order_lifecycle
+260330 15:27:42	     9 Query	CREATE VIEW vw_product_performance AS
+SELECT 
+    p.product_id,
+    p.product_name,
+    SUM(oi.quantity) AS total_sold,
+    SUM(oi.quantity * oi.price) AS revenue
+FROM products p
+LEFT JOIN order_items oi ON p.product_id = oi.product_id
+GROUP BY p.product_id
+260330 15:27:59	     9 Query	SELECT * FROM vw_product_performance
+260330 15:28:51	     9 Query	CREATE VIEW vw_low_stock AS
+SELECT 
+    p.product_name,
+    SUM(i.stock_quantity) AS total_stock
+FROM products p
+JOIN inventory i ON p.product_id = i.product_id
+GROUP BY p.product_id
+HAVING total_stock < 10
+260330 15:29:02	     9 Query	SELECT * FROM vw_low_stock
+260330 15:29:44	     9 Query	CREATE VIEW vw_active_orders AS
+SELECT 
+    order_id,
+    total_amount,
+    status
+FROM orders
+WHERE status IN ('PLACED','PAID','SHIPPED')
+260330 15:29:53	     9 Query	SELECT * FROM vw_active_orders
+260330 15:40:29	     9 Query	SELECT 
+    product_name,
+    total_sold
+FROM vw_product_performance
+ORDER BY total_sold DESC
+LIMIT 5
+260330 15:41:19	     9 Query	SELECT 
+    MONTH(order_date) AS month,
+    SUM(total_amount) AS revenue
+FROM orders
+GROUP BY MONTH(order_date)
+260330 15:42:46	     9 Query	SELECT 
+    name,
+    total_spent
+FROM vw_customer_spending
+ORDER BY total_spent DESC
+260330 15:44:32	     9 Query	SELECT 
+    status,
+    COUNT(*) AS count
+FROM orders
+GROUP BY status
+260330 15:46:02	     9 Query	SELECT 
+    CASE
+        WHEN stock_quantity = 0 THEN 'Out of Stock'
+        WHEN stock_quantity < 3 THEN 'Critical'
+        WHEN stock_quantity < 10 THEN 'Low'
+        ELSE 'Healthy'
+    END AS stock_status,
+    COUNT(*) AS products
+FROM inventory
+GROUP BY stock_status
+260330 15:46:42	     9 Query	SELECT 
+    (SELECT COUNT(*) FROM customers) AS total_customers,
+
+    (SELECT COUNT(*) FROM orders) AS total_orders,
+
+    (SELECT SUM(total_amount) 
+     FROM orders 
+     WHERE status IN ('PAID','DELIVERED')) AS total_revenue,
+
+    (SELECT COUNT(*) FROM products 
+     WHERE status = 'ACTIVE') AS active_products,
+
+    (SELECT COUNT(*) FROM orders 
+     WHERE status = 'CANCELLED') AS cancelled_orders,
+
+    (SELECT COUNT(*) FROM shipments 
+     WHERE status = 'SHIPPED') AS active_shipments,
+
+    (SELECT SUM(stock_quantity) FROM inventory) AS total_inventory,
+
+    (SELECT COUNT(*) FROM inventory 
+     WHERE stock_quantity < 3) AS critical_stock_items
+260330 15:58:21	     9 Query	SELECT fn_calculate_order_total(1) AS order_total
+		     9 Query	SELECT SUM(oi.quantity * oi.price * (1+ (p.gst_percent / 100))) INTO validate_total
+FROM order_items oi
+JOIN products p ON oi.product_id = p.product_id
+WHERE oi.order_id =  NAME_CONST('fn_order_id',1)
+260330 15:59:17	     9 Query	SELECT 
+    order_id,
+    fn_calculate_order_total(order_id) AS calculated_total
+FROM orders
+		     9 Query	SELECT SUM(oi.quantity * oi.price * (1+ (p.gst_percent / 100))) INTO validate_total
+FROM order_items oi
+JOIN products p ON oi.product_id = p.product_id
+WHERE oi.order_id =  NAME_CONST('fn_order_id',3)
+		     9 Query	SELECT SUM(oi.quantity * oi.price * (1+ (p.gst_percent / 100))) INTO validate_total
+FROM order_items oi
+JOIN products p ON oi.product_id = p.product_id
+WHERE oi.order_id =  NAME_CONST('fn_order_id',4)
+		     9 Query	SELECT SUM(oi.quantity * oi.price * (1+ (p.gst_percent / 100))) INTO validate_total
+FROM order_items oi
+JOIN products p ON oi.product_id = p.product_id
+WHERE oi.order_id =  NAME_CONST('fn_order_id',2)
+		     9 Query	SELECT SUM(oi.quantity * oi.price * (1+ (p.gst_percent / 100))) INTO validate_total
+FROM order_items oi
+JOIN products p ON oi.product_id = p.product_id
+WHERE oi.order_id =  NAME_CONST('fn_order_id',1)
+260330 16:00:53	     9 Query	SELECT fn_total_orders_by_customer(1) AS total_orders
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',1)
+260330 16:03:00	     9 Query	SELECT fn_total_orders_by_customer(4) AS total_orders
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',4)
+260330 16:03:05	     9 Query	SELECT fn_total_orders_by_customer(3) AS total_orders
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',3)
+260330 16:03:52	     9 Query	SELECT 
+    customer_id,
+    fn_total_orders_by_customer(customer_id) AS total_orders
+FROM customers
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',1)
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',2)
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',3)
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',4)
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',5)
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',6)
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',7)
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',8)
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',9)
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',10)
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',11)
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',12)
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',13)
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',14)
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',15)
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',16)
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',17)
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',18)
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',19)
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',20)
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',21)
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',22)
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',23)
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',24)
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',25)
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',26)
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',27)
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',28)
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',29)
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',30)
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',31)
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',32)
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',33)
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',34)
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',35)
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',36)
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',37)
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',38)
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',39)
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',40)
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',41)
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',42)
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',43)
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',44)
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',45)
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',46)
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',47)
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',48)
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',49)
+		     9 Query	SELECT COUNT(*) INTO validate_count FROM orders WHERE customer_id =  NAME_CONST('fn_customer_id',50)
+260330 16:05:45	     9 Query	SELECT fn_total_spent_by_customer(1) AS total_spent
+		     9 Query	SELECT SUM(total_amount) INTO validate_total FROM orders
+WHERE customer_id =  NAME_CONST('fn_customer_id',1) 
+AND status IN ('PAID','DELIVERED')
+260330 16:05:52	     9 Query	SELECT fn_total_spent_by_customer(2) AS total_spent
+		     9 Query	SELECT SUM(total_amount) INTO validate_total FROM orders
+WHERE customer_id =  NAME_CONST('fn_customer_id',2) 
+AND status IN ('PAID','DELIVERED')
+260330 16:05:56	     9 Query	SELECT fn_total_spent_by_customer(3) AS total_spent
+		     9 Query	SELECT SUM(total_amount) INTO validate_total FROM orders
+WHERE customer_id =  NAME_CONST('fn_customer_id',3) 
+AND status IN ('PAID','DELIVERED')
+260330 16:06:00	     9 Query	SELECT fn_total_spent_by_customer(4) AS total_spent
+		     9 Query	SELECT SUM(total_amount) INTO validate_total FROM orders
+WHERE customer_id =  NAME_CONST('fn_customer_id',4) 
+AND status IN ('PAID','DELIVERED')
+260330 16:06:29	     9 Query	Check total stock of a product
+260330 16:06:31	     9 Query	SELECT fn_check_stock(1) AS available_stock
+		     9 Query	SELECT SUM(stock_quantity) INTO validate_stock FROM inventory WHERE product_id =  NAME_CONST('fn_product_id',1)
+260330 16:06:37	     9 Query	SELECT fn_check_stock(3) AS available_stock
+		     9 Query	SELECT SUM(stock_quantity) INTO validate_stock FROM inventory WHERE product_id =  NAME_CONST('fn_product_id',3)
+260330 16:06:43	     9 Query	SELECT fn_check_stock(15) AS available_stock
+		     9 Query	SELECT SUM(stock_quantity) INTO validate_stock FROM inventory WHERE product_id =  NAME_CONST('fn_product_id',15)
+260330 16:07:22	     9 Query	SELECT 
+    product_id,
+    fn_check_stock(product_id) AS stock
+FROM products
+		     9 Query	SELECT SUM(stock_quantity) INTO validate_stock FROM inventory WHERE product_id =  NAME_CONST('fn_product_id',1)
+		     9 Query	SELECT SUM(stock_quantity) INTO validate_stock FROM inventory WHERE product_id =  NAME_CONST('fn_product_id',2)
+		     9 Query	SELECT SUM(stock_quantity) INTO validate_stock FROM inventory WHERE product_id =  NAME_CONST('fn_product_id',3)
+		     9 Query	SELECT SUM(stock_quantity) INTO validate_stock FROM inventory WHERE product_id =  NAME_CONST('fn_product_id',4)
+		     9 Query	SELECT SUM(stock_quantity) INTO validate_stock FROM inventory WHERE product_id =  NAME_CONST('fn_product_id',5)
+		     9 Query	SELECT SUM(stock_quantity) INTO validate_stock FROM inventory WHERE product_id =  NAME_CONST('fn_product_id',6)
+		     9 Query	SELECT SUM(stock_quantity) INTO validate_stock FROM inventory WHERE product_id =  NAME_CONST('fn_product_id',7)
+		     9 Query	SELECT SUM(stock_quantity) INTO validate_stock FROM inventory WHERE product_id =  NAME_CONST('fn_product_id',8)
+		     9 Query	SELECT SUM(stock_quantity) INTO validate_stock FROM inventory WHERE product_id =  NAME_CONST('fn_product_id',9)
+		     9 Query	SELECT SUM(stock_quantity) INTO validate_stock FROM inventory WHERE product_id =  NAME_CONST('fn_product_id',10)
+		     9 Query	SELECT SUM(stock_quantity) INTO validate_stock FROM inventory WHERE product_id =  NAME_CONST('fn_product_id',11)
+		     9 Query	SELECT SUM(stock_quantity) INTO validate_stock FROM inventory WHERE product_id =  NAME_CONST('fn_product_id',12)
+		     9 Query	SELECT SUM(stock_quantity) INTO validate_stock FROM inventory WHERE product_id =  NAME_CONST('fn_product_id',13)
+		     9 Query	SELECT SUM(stock_quantity) INTO validate_stock FROM inventory WHERE product_id =  NAME_CONST('fn_product_id',14)
+		     9 Query	SELECT SUM(stock_quantity) INTO validate_stock FROM inventory WHERE product_id =  NAME_CONST('fn_product_id',15)
+260330 16:08:01	     9 Query	SELECT fn_order_status(1) AS order_status
+		     9 Query	SELECT status INTO validate_status FROM orders
+WHERE order_id =  NAME_CONST('fn_order_id',1)
+260330 16:08:34	     9 Query	SELECT fn_order_status(1) AS order_status
+		     9 Query	SELECT status INTO validate_status FROM orders
+WHERE order_id =  NAME_CONST('fn_order_id',1)
+260330 16:08:37	     9 Query	SELECT 
+    order_id,
+    fn_order_status(order_id) AS readable_status
+FROM orders
+		     9 Query	SELECT status INTO validate_status FROM orders
+WHERE order_id =  NAME_CONST('fn_order_id',3)
+		     9 Query	SELECT status INTO validate_status FROM orders
+WHERE order_id =  NAME_CONST('fn_order_id',4)
+		     9 Query	SELECT status INTO validate_status FROM orders
+WHERE order_id =  NAME_CONST('fn_order_id',2)
+		     9 Query	SELECT status INTO validate_status FROM orders
+WHERE order_id =  NAME_CONST('fn_order_id',1)
+260330 16:09:14	     9 Query	SELECT 
+    o.order_id,
+    c.name,
+    fn_order_status(o.order_id) AS status,
+    fn_calculate_order_total(o.order_id) AS total
+FROM orders o
+JOIN customers c ON o.customer_id = c.customer_id
+		     9 Query	SELECT status INTO validate_status FROM orders
+WHERE order_id =  NAME_CONST('fn_order_id',1)
+		     9 Query	SELECT SUM(oi.quantity * oi.price * (1+ (p.gst_percent / 100))) INTO validate_total
+FROM order_items oi
+JOIN products p ON oi.product_id = p.product_id
+WHERE oi.order_id =  NAME_CONST('fn_order_id',1)
+		     9 Query	SELECT status INTO validate_status FROM orders
+WHERE order_id =  NAME_CONST('fn_order_id',2)
+		     9 Query	SELECT SUM(oi.quantity * oi.price * (1+ (p.gst_percent / 100))) INTO validate_total
+FROM order_items oi
+JOIN products p ON oi.product_id = p.product_id
+WHERE oi.order_id =  NAME_CONST('fn_order_id',2)
+		     9 Query	SELECT status INTO validate_status FROM orders
+WHERE order_id =  NAME_CONST('fn_order_id',3)
+		     9 Query	SELECT SUM(oi.quantity * oi.price * (1+ (p.gst_percent / 100))) INTO validate_total
+FROM order_items oi
+JOIN products p ON oi.product_id = p.product_id
+WHERE oi.order_id =  NAME_CONST('fn_order_id',3)
+		     9 Query	SELECT status INTO validate_status FROM orders
+WHERE order_id =  NAME_CONST('fn_order_id',4)
+		     9 Query	SELECT SUM(oi.quantity * oi.price * (1+ (p.gst_percent / 100))) INTO validate_total
+FROM order_items oi
+JOIN products p ON oi.product_id = p.product_id
+WHERE oi.order_id =  NAME_CONST('fn_order_id',4)
+260330 16:10:32	     9 Query	SHOW VARIABLES LIKE 'general_log%'
+260330 16:10:53	     9 Query	SET GLOBAL general_log = 'OFF'
